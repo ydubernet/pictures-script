@@ -13,11 +13,11 @@
 #            # of deleting process               #
 #            # Adding a success counter          #
 #            # Adding usage                      #
+# 03/09/2014 # Adding a default comportment      #
 #            #                                   #
 # ############################################## #
 
 # TODO : Solve the space problems so that we could execute this script without renaming all repositories
-# TODO : Usage and a default comportment
 # TODO : Choose a license
 # TODO : Make the grep work for pictures whose name contains dashes
 # TODO : Take into parameter the location of the pictures software so that the user could launch the script from everywhere
@@ -57,14 +57,14 @@ function help_script(){
 
 # This function deletes all the temporary files before starting the important job.
 function delete_temporary_files(){
-	if [ -f $4 ]
+	if [ -f a_supprimer.txt ]
 	then
-		rm $4
+		rm a_supprimer.txt
 	fi
 
-	if [ -f $2 ]
+	if [ -f edite_out.txt ]
 	then
-		rm $2
+		rm edite_out.txt
 	fi
 }
 
@@ -94,9 +94,39 @@ function delete_files(){
 }
 
 # This function increments a global counter which counts the number of actions done.
-function counter_plus(){
+function counter_plus() {
   counter = $counter + 1;
 }
+
+
+# We extract all the pictures names from a file obtained by a ls -l or a dir on Windows.
+function extractJPGPictures() {
+	grep -E -o "[A-Z0-9_]*[\(0-9\)]*.JPE?G|[A-Z0-9_]*[\(0-9\)]*.jpe?g" $1 > $2
+
+	echo "`cat $2 | wc -l` file(s) have been grepped in the $2 file.";
+}
+
+
+# We read the file with the pictures names and look for pictures from the current repository
+# We can exclude a repository
+# Then, all found pictures are put in the file we previously deleted
+function lookForJPGPicture() {
+	while read line;
+		do
+		touch $4
+		#echo -e "$line";
+		if [ $# -eq 3 ]
+		then
+			find . -name $line | grep -v $3 >> $2;
+		else
+			find . -name $line >> $2
+		fi
+	done < $1
+
+	echo "`cat $2 |wc -l` file(s) grepped in the $1 have been found from the current repository.";
+}
+
+
 
 
 # ------------------------------------------------------------------------------------
@@ -115,25 +145,23 @@ if [ $# -eq 1 -a $1 == "help" ]
 		exit 0
 fi
 
+extractJPGPictures edite.txt edite_out.txt
 
-# We extract all the pictures names from a file obtained by a ls -l or a dir on Windows.
-grep -E -o "[A-Z0-9_]*[\(0-9\)]*.JPE?G|[A-Z0-9_]*[\(0-9\)]*.jpe?g" $1 > $2
+if [ $# -ge 3 ]
+then
+	lookForJPGPictures edite_out.txt a_supprimer.txt $3
+else
+	lookForJPGPictures edite_out.txt a_supprimer.txt
+fi
 
-echo "`cat $2 | wc -l` file(s) have been grepped in the $2 file.";
-
-
-# We read the file with the pictures names and look for pictures from the current repository
-# We can exclude a repository
-# Then, all found pictures are put in the file we previously deleted
-while read line;
-	do
-	touch $4
-	#echo -e "$line";
-	find . -name $line | grep -v $3 >> $4
-done < $2
-
-echo "`cat $4 |wc -l` file(s) grepped in the $2 have been found from the current repository.";
-
-
-delete_files $4
+if [ $# -eq 2 -a $2 == "delete" ]
+then
+	delete_files a_supprimer.txt;
+elif [ $# -eq 3 -a $3 == "delete" ]
+then
+	delete_files a_supprimer.txt;
+elif [ $# -eq 4 -a $4 == "delete" ]
+then
+	delete_files a_supprimer.txt;
+fi
 
