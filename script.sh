@@ -14,7 +14,8 @@
 #            # Adding a success counter          #
 #            # Adding usage                      #
 # 03/09/2014 # Adding a default comportment      #
-#            #                                   #
+# 18/08/2015 # Adding a function to extract CR2  #
+#            # pictures                          #
 # ############################################## #
 
 # TODO : Solve the space problems so that we could execute this script without renaming all repositories
@@ -74,7 +75,7 @@ function delete_files(){
 	echo "Are you sure you want to delete those files ? [y/n] " ;
 	read answ;
 
-	if [ $answ = "y" ]; then
+	if [ $answ = "y" -o $answ = "Y" ]; then
 		while read line;
 		do
 			echo -e "Trying to delete $line";
@@ -99,11 +100,18 @@ function counter_plus() {
 }
 
 
-# We extract all the pictures names from a file obtained by a ls -l or a dir on Windows.
+# To extract all the JPG files from a file obtained by a ls -l or a dir on Windows.
 function extractJPGPictures() {
 	grep -E -o "[A-Z0-9_]*[\(0-9\)]*.JPE?G|[A-Z0-9_]*[\(0-9\)]*.jpe?g" $1 > $2
 
-	echo "`cat $2 | wc -l` file(s) have been grepped in the $2 file.";
+	echo "`cat $2 | wc -l` JPG file(s) have been grepped in the $2 file.";
+}
+
+# To extract all the CR2 (Canon RAW format) files from a file obtained by a ls -l or a dir on Windows.
+function extractCR2Pictures() {
+	grep -E -o "[A-Z0-9_]*[\(0-9\)]*.CR2" $1 > $2
+
+	echo "`cat $2 | wc -l` CR2 file(s) have been grepped in the $2 file.";
 }
 
 
