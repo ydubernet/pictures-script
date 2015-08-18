@@ -1,4 +1,4 @@
-#! /bin/bash
+cd #! /bin/bash
 
 # This script is set to check in a repository if some pictures given in an input file exist
 # if so, the default comportment is to show them on the screen
@@ -9,13 +9,16 @@
 # ############################################## #
 #    Date    #            Remark                 #
 # 31/08/2014 # First version with basic rules    #
-#
-#
-#
+#            #                                   #
+#            #                                   #
+# ############################################## #
 
 # TODO : Solve the space problems so that we could execute this script without renaming all repositories
 # TODO : Asking a confirmation to the user if he decides to delete files
 # TODO : Usage and a default comportment
+# TODO : Choose a license
+# TODO : Make the grep work for pictures whose name contains dashes
+# TODO : Take into parameter the location of the pictures software so that the user could launch the script from everywhere
 
 # We extract all the pictures names from a file obtained by a ls -l or a dir on Windows.
 grep -E -o "[A-Z0-9_]*[\(0-9\)]*.JPE?G|[A-Z0-9_]*[\(0-9\)]*.jpe?g" $1 > $2
