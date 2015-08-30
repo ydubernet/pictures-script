@@ -28,6 +28,8 @@
 #            # Removing the without argument     #
 #            # show help call                    #
 # 30/08/2015 # Making grep work with dashes      #
+#            # Simplifying a lot the regex to    #
+#            # match any file name               #
 # ############################################## #
 
 # TODO : Solve the space problems so that we could execute this script without renaming all repositories
@@ -138,14 +140,14 @@ function counter_plus() {
 
 # To extract all the JPG files from a file obtained by a ls -l or a dir on Windows.
 function extract_JPG_pictures() {
-	grep -E -o -i "[-a-zA-Z0-9_]*[\(0-9\)]*.JPE?G" $1 > $2
+	grep -E -x -i "^.*\.(JPE?G)$" $1 > $2
 
 	echo "`cat $2 | wc -l` JPG file(s) have been grepped in the $2 file.";
 }
 
 # To extract all the CR2 (Canon RAW format) files from a file obtained by a ls -l or a dir on Windows.
 function extract_CR2_pictures() {
-	grep -E -o -i "[-a-zA-Z0-9_]*[\(0-9\)]*.CR2" $1 > $2
+	grep -E -x -i "^.*\.(CR2)$" $1 > $2
 
 	echo "`cat $2 | wc -l` CR2 file(s) have been grepped in the $2 file.";
 }
