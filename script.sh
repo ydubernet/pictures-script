@@ -27,11 +27,11 @@
 #            # (default JPG) 					 #
 #            # Removing the without argument     #
 #            # show help call                    #
+# 30/08/2015 # Making grep work with dashes      #
 # ############################################## #
 
 # TODO : Solve the space problems so that we could execute this script without renaming all repositories
 # TODO : Choose a license
-# TODO : Make the grep work for pictures whose name contains dashes
 # TODO : Take into parameter the location of the pictures software so that the user could launch the script from everywhere
 # TODO : Make this script work with a lot of other formats. After all, we do nt necessarly need to work with pictures, given the commands we use in this script.
 # TODO : Test the exclude a folder functionality
@@ -138,14 +138,14 @@ function counter_plus() {
 
 # To extract all the JPG files from a file obtained by a ls -l or a dir on Windows.
 function extract_JPG_pictures() {
-	grep -E -o "[A-Z0-9_]*[\(0-9\)]*.JPE?G|[A-Z0-9_]*[\(0-9\)]*.jpe?g" $1 > $2
+	grep -E -o -i "[-a-zA-Z0-9_]*[\(0-9\)]*.JPE?G" $1 > $2
 
 	echo "`cat $2 | wc -l` JPG file(s) have been grepped in the $2 file.";
 }
 
 # To extract all the CR2 (Canon RAW format) files from a file obtained by a ls -l or a dir on Windows.
 function extract_CR2_pictures() {
-	grep -E -o "[A-Z0-9_]*[\(0-9\)]*.CR2" $1 > $2
+	grep -E -o -i "[-a-zA-Z0-9_]*[\(0-9\)]*.CR2" $1 > $2
 
 	echo "`cat $2 | wc -l` CR2 file(s) have been grepped in the $2 file.";
 }
