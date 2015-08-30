@@ -30,14 +30,14 @@
 # 30/08/2015 # Making grep work with dashes      #
 #            # Simplifying a lot the regex to    #
 #            # match any file name               #
+#            # Doc the new help function         #
 # ############################################## #
 
 # TODO : Solve the space problems so that we could execute this script without renaming all repositories
 # TODO : Choose a license
 # TODO : Take into parameter the location of the pictures software so that the user could launch the script from everywhere
-# TODO : Make this script work with a lot of other formats. After all, we do nt necessarly need to work with pictures, given the commands we use in this script.
-# TODO : Test the exclude a folder functionality
-# TODO : Fully reimplement the help function
+# TODO : Make this script work with a lot of other formats. After all, we do not necessarly need to work with pictures, given the commands we use in this script.
+# TODO : Permit the user to look for files non recursively
 
 
 #Global variables
@@ -71,27 +71,17 @@ delete=0
 # This function explains to the user everything he can do with.
 # DO NOT FORGET TO EDIT THE HELP WHEN YOU ADD/REMOVE a tool.
 function help_script(){
-	echo -e "This script has been made to help you doing automatically some boring tasks :";
-	echo -e "Version 0.1 : looks for all pictures taken into parameter in the current folder,";
-	echo -e "              shows them on the Terminal or deletes them if the user want to.";
-	echo -e ;
-	echo -e "Usage : ";
-	echo -e "./script.sh";
-	echo -e "Will show you this help.";
-	echo -e "./script.sh help";
-	echo -e "Will show you this help.";
-	echo -e "./script.sh your_input_file";
-	echo -e "Will show you on the Terminal if some of the input files exist from the current folder.";
-	echo -e "./script.sh your_input_file delete";
-	echo -e "Will search from the current folder all the files and delete them (after asking confirmation).";
-	echo -e "./script.sh your_input_file folder_name_where_the_script_should_be_executed";
-	echo -e "Will move to the input folder and look for the input files.";
-	echo -e "./script.sh your_input_file folder_name_where_the_script_should_be_executed delete";
-	echo -e "Will move to the input folder and delete all the input files found (after asking confirmation).";
-	echo -e "./script.sh your_input_file folder_name_where_the_script_should_be_executed a_non_watching_folder";
-	echo -e "Will move to the input folder and look for the input files, except in the non watching repotitory.";
-	echo -e "./script.sh your_input_file folder_name_where_the_script_should_be_executed a_non_watching_folder delete";
-	echo -e "Will move to the input folder and look for the input files, exception in the non watching folder, and delete them (after asking confirmation).";
+	echo -e "This script is a little tool to help you gain some time in managing pictures."
+	echo -e "In its version 0.2, an option tool has been implemented, which makes this script a little bit more user-friendly."
+	echo -e "Default comportment : this script will grep all jpg files and put them in a out.txt file."
+	echo -e "Options :"
+	echo -e "-h : shows you this help"
+	echo -e "-e [extract_format] : to set the file format which will be grepped. For the moment, only JPG or CR2 files"
+	echo -e "-f input_file : if set, will look recursively for the given input files in the current directory and return the existing ones in a filtered.txt file"
+	echo -e "-i ignored_folder : if set, -f option has to be set and the script will look for the given input files in the current 
+			    directory but ignoring the ignored_folder subdirectory"	
+    echo -e "-o output_file : to set another output file name than the default out.txt one"
+    echo -e "-d : Will delete the output file listed content (after asking confirmation, of course). So BE CAREFULL using it."
 }
 
 # This function deletes all the temporary files before starting the important job.
@@ -163,7 +153,7 @@ function look_for_files() {
 		#echo -e "$line";
 		if [ $# -eq 3 ]
 		then
-			find . -name $line | grep -v $3 >> $2; #exclude a folder ; 2015-08-27 : Bugged
+			find . -name $line | grep -v $3 >> $2; #exclude a folder
 		else
 			find . -name $line >> $2
 		fi
