@@ -1,8 +1,7 @@
 #! /bin/bash
 
-# This script is set to check in a folder if some pictures given in an input file exist
-# if so, the default comportment is to show them on the screen
-# The user can param the execution of the script so that instead of showing them on the screen, it deletes them.
+# This script is a tool to manage a lot of files depending on some formats.
+# It mainly logs them, but if an option is set, it also can perform write operations such as deletes.
 
 # © Copyright 2014-2015 - Yoann DUBERNET - yoann [dot] dubernet [ at ] gmail.com
 
@@ -81,7 +80,7 @@ function help_script(){
 	echo -e "-f extract_format : to set the file format which will be grepped. By default, JPG format." 
 	echo -e "-i input_file : if set, will look recursively for the given input files in the current directory and return the existing ones in a filtered.txt file"
 	echo -e "-a avoided_folder : if set, -i option has to be set and the script will look for the given input files in the current 
-/		    directory but ignoring the avoided subdirectory"	
+		    directory but ignoring the avoided subdirectory"	
     echo -e "-o output_file : to set another output file name than the default out.txt one"
     echo -e "-d : Will delete the output file listed content (after asking confirmation, of course). So BE CAREFULL using it."
 }
@@ -138,12 +137,6 @@ function extract_JPG_pictures() {
 	echo "`cat $2 | wc -l` JPG file(s) have been grepped in the $2 file.";
 }
 
-# To extract all the CR2 (Canon RAW format) files from a file obtained by a ls -l or a dir on Windows.
-#function extract_CR2_pictures() {
-#	grep -E -x -i "^.*\.(CR2)$" $1 > $2
-#
-#	echo "`cat $2 | wc -l` CR2 file(s) have been grepped in the $2 file.";
-#}
 
 # To extract all the files with a specified $3 format from a file obtained by a ls -l or a dir on Windows.
 function extract_files() {
@@ -159,8 +152,6 @@ function extract_files() {
 function look_for_files() {
 	while read line;
 		do
-		#touch $4          # 2015-08-19 : Why this ???
-		#echo -e "$line";
 		if [ $# -eq 3 ]
 		then
 			find . -name $line | grep -v $3 >> $2; #exclude a folder
@@ -181,13 +172,6 @@ function look_for_files() {
 
 #first, we delete temporary files
 delete_temporary_files
-
-# Shows the help
-#if [ $# -eq 1 -a $1 == "help" ]
-#	then
-#		help_script
-#		exit 0
-#fi
 
 #extracts option values
 while getopts "h?e:i:f:o:d" opt; do
@@ -240,29 +224,3 @@ if [ $delete -eq 1 ]
 then 
 	delete_files $output_file
 fi
-
-
-#if [ $# -ge 1 ]
-#then
-#
-#	extractJPGPictures $1 edite_out.txt
-#fi
-
-#if [ $# -ge 3 ]
-#then
-#	lookForPictures edite_out.txt a_supprimer.txt $3
-#else
-#	lookForPictures edite_out.txt a_supprimer.txt
-#fi
-
-#if [ $# -eq 2 -a "$2" == "delete" ]
-#then
-#	delete_files a_supprimer.txt;
-#elif [ $# -eq 3 -a "$3" == "delete" ]
-#then
-#	delete_files a_supprimer.txt;
-#elif [ $# -eq 4 -a "$4" == "delete" ]
-#then
-#	delete_files a_supprimer.txt;
-#fi
-
