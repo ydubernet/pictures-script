@@ -31,6 +31,9 @@
 #            # Simplifying a lot the regex to    #
 #            # match any file name               #
 #            # Doc the new help function         #
+# 02/09/2015 # Renaming options                  #
+#            #                                   # 
+#            #                                   #
 # ############################################## #
 
 # TODO : Solve the space problems so that we could execute this script without renaming all repositories
@@ -79,7 +82,7 @@ function help_script(){
 	echo -e "-f extract_format : to set the file format which will be grepped. By default, JPG format." 
 	echo -e "-i input_file : if set, will look recursively for the given input files in the current directory and return the existing ones in a filtered.txt file"
 	echo -e "-a avoided_folder : if set, -i option has to be set and the script will look for the given input files in the current 
-			    directory but ignoring the avoided subdirectory"	
+/		    directory but ignoring the avoided subdirectory"	
     echo -e "-o output_file : to set another output file name than the default out.txt one"
     echo -e "-d : Will delete the output file listed content (after asking confirmation, of course). So BE CAREFULL using it."
 }
@@ -129,6 +132,7 @@ function counter_plus() {
 
 
 # To extract all the JPG files from a file obtained by a ls -l or a dir on Windows.
+# Specific function for JPG format which can be both JPG and JPEG
 function extract_JPG_pictures() {
 	grep -E -x -i "^.*\.(JPE?G)$" $1 > $2
 
@@ -136,10 +140,17 @@ function extract_JPG_pictures() {
 }
 
 # To extract all the CR2 (Canon RAW format) files from a file obtained by a ls -l or a dir on Windows.
-function extract_CR2_pictures() {
-	grep -E -x -i "^.*\.(CR2)$" $1 > $2
+#function extract_CR2_pictures() {
+#	grep -E -x -i "^.*\.(CR2)$" $1 > $2
+#
+#	echo "`cat $2 | wc -l` CR2 file(s) have been grepped in the $2 file.";
+#}
 
-	echo "`cat $2 | wc -l` CR2 file(s) have been grepped in the $2 file.";
+# To extract all the files with a specified $3 format from a file obtained by a ls -l or a dir on Windows.
+function extract_files() {
+	grep -E -x -i "^.*\.($3)$" $1 > $2
+
+	echo "`cat $2 | wc -l` $3 file(s) have been grep in the $2 file.";
 }
 
 
@@ -218,11 +229,11 @@ else
 fi
 
 
-if [ "$extract_format" = "CR2" ] || [ "$extract_format" = "cr2" ]
+if [ "$extract_format" != "" ]
 then
-    extract_CR2_pictures $filtered_file $output_file
+    extract_files $filtered_file $output_file $extract_format
 else 
-	# default pictures format type we work on
+	# default files format type we work on
 	extract_JPG_pictures $filtered_file $output_file
 fi
 
