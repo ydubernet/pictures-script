@@ -76,10 +76,10 @@ function help_script(){
 	echo -e "Default comportment : this script will grep all jpg files and put them in a out.txt file."
 	echo -e "Options :"
 	echo -e "-h : shows you this help"
-	echo -e "-e [extract_format] : to set the file format which will be grepped. For the moment, only JPG or CR2 files"
-	echo -e "-f input_file : if set, will look recursively for the given input files in the current directory and return the existing ones in a filtered.txt file"
-	echo -e "-i ignored_folder : if set, -f option has to be set and the script will look for the given input files in the current 
-			    directory but ignoring the ignored_folder subdirectory"	
+	echo -e "-f extract_format : to set the file format which will be grepped. By default, JPG format." 
+	echo -e "-i input_file : if set, will look recursively for the given input files in the current directory and return the existing ones in a filtered.txt file"
+	echo -e "-a avoided_folder : if set, -i option has to be set and the script will look for the given input files in the current 
+			    directory but ignoring the avoided subdirectory"	
     echo -e "-o output_file : to set another output file name than the default out.txt one"
     echo -e "-d : Will delete the output file listed content (after asking confirmation, of course). So BE CAREFULL using it."
 }
@@ -186,13 +186,13 @@ while getopts "h?e:i:f:o:d" opt; do
         help_script
         exit 0
         ;;
-    e)
+    f)
         extract_format=$OPTARG
         ;;
-    f)
+    i)
         input_file=$OPTARG
         ;;
-    i)
+    a)
 		ignored_folder=$OPTARG
 		;;
 	o)
