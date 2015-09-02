@@ -32,14 +32,13 @@
 #            # match any file name               #
 #            # Doc the new help function         #
 # 02/09/2015 # Renaming options                  #
-#            #                                   # 
+#            # Generic format extracting type    # 
 #            #                                   #
 # ############################################## #
 
 # TODO : Solve the space problems so that we could execute this script without renaming all repositories
 # TODO : Choose a license
 # TODO : Take into parameter the location of the pictures software so that the user could launch the script from everywhere
-# TODO : Make this script work with a lot of other formats. After all, we do not necessarly need to work with pictures, given the commands we use in this script.
 # TODO : Permit the user to look for files non recursively
 
 
