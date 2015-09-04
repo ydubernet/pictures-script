@@ -32,13 +32,18 @@
 #            # Doc the new help function         #
 # 02/09/2015 # Renaming options                  #
 #            # Generic format extracting type    # 
-#            #                                   #
+# 04/09/2015 # Working on CR2 to JPG converter   #
+#            # algorithm                         #
 # ############################################## #
+
+
+# TODO Zone :
 
 # TODO : Solve the space problems so that we could execute this script without renaming all repositories
 # TODO : Choose a license
 # TODO : Take into parameter the location of the pictures software so that the user could launch the script from everywhere
 # TODO : Permit the user to look for files non recursively
+# TODO : Think about deleting input_file as an option to get it as an input of the script
 
 
 #Global variables
@@ -66,12 +71,15 @@ output_file="out.txt"
 #A boolean which will generate a call to delete_files function if it is true
 delete=0
 
+#A boolean which will make a call to convert CR2 to JPG batch if it is true
+convert=0
+
 # -------------------------------------------------------------------------------------------------------------------------
 # Functions :
 
-# This function explains to the user everything he can do with.
+# This function explains to the user everything he can do with this script.
 # DO NOT FORGET TO EDIT THE HELP WHEN YOU ADD/REMOVE a tool.
-function help_script(){
+function help_script() {
 	echo -e "This script is a little tool to help you gain some time in managing pictures."
 	echo -e "In its version 0.2, an option tool has been implemented, which makes this script a little bit more user-friendly."
 	echo -e "Default comportment : this script will grep all jpg files and put them in a out.txt file."
@@ -82,11 +90,12 @@ function help_script(){
 	echo -e "-a avoided_folder : if set, -i option has to be set and the script will look for the given input files in the current 
 		    directory but ignoring the avoided subdirectory"	
     echo -e "-o output_file : to set another output file name than the default out.txt one"
+    echo -e "-c : Will call a script which converts CR2 to JPG files"
     echo -e "-d : Will delete the output file listed content (after asking confirmation, of course). So BE CAREFULL using it."
 }
 
 # This function deletes all the temporary files before starting the important job.
-function delete_temporary_files(){
+function delete_temporary_files() {
 	if [ -f $filtered_file ]
 	then
 		rm $filtered_file
@@ -100,7 +109,7 @@ function delete_temporary_files(){
 
 
 # This function deletes all files writen in the temporary text file in param
-function delete_files(){
+function delete_files() {
 	echo "Are you sure you want to delete those files ? [y/n] " ;
 	read answ;
 
@@ -164,8 +173,6 @@ function look_for_files() {
 }
 
 
-
-
 # ------------------------------------------------------------------------------------
 
 # script
@@ -174,7 +181,7 @@ function look_for_files() {
 delete_temporary_files
 
 #extracts option values
-while getopts "h?e:i:f:o:d" opt; do
+while getopts "h?e:i:f:o:dc" opt; do
     case "$opt" in
     h|\?)
         help_script
@@ -192,12 +199,16 @@ while getopts "h?e:i:f:o:d" opt; do
 	o)
 		output_file=$OPTARG
 		;;
-	d)  delete=1
+	d) 
+		delete=1
+		;;
+	c)
+		convert=1
 		;;
     esac
 done
 
-shift $((OPTIND-1)) # TODO : Test
+shift $((OPTIND-1))
 
 if [ "$input_file" != "" ]
 then
@@ -217,7 +228,19 @@ then
     extract_files $filtered_file $output_file $extract_format
 else 
 	# default files format type we work on
+	# Also default comportment if no option set
 	extract_JPG_pictures $filtered_file $output_file
+fi
+
+if [ $convert -eq 1 ]
+then
+	if [ -f $output_file ]
+	then
+		output_file="CR2$output_file" # To avoid overriding previous output file
+	fi
+	# To make sure the input file contains only CR2 files, we first call extract_files function on CR2 format
+	extract_files $filtered_file $output_file "CR2"
+	sh convert_cr2_to_jpg.sh $output_file
 fi
 
 if [ $delete -eq 1 ]
