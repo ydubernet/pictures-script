@@ -8,6 +8,9 @@
 #    Date    #            Remark                 #
 # 02/09/2015 # First version with basic algorithm#
 # 04/09/2015 # Help function                     #
+# 06/09/2015 # Managing both with and without    #
+#            # input text file for the converter #
+#            # function                          #
 #            #                                   #
 # ############################################## #
 
@@ -17,8 +20,7 @@
 # TODO : Implement a default comportment
 # TODO : Check if annex softwares are installed
 # TODO : Add a verbose option implementation
-# TODO : Make this script work when called by script.sh by reorganising the code order
-
+# TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
 
 
 #Global variables
@@ -26,8 +28,11 @@
 #A POSIX variable
 OPTIND=1               # Reset in case getopts has been used previously in the shell.
 
-# This value represents the number of files whic have already been converted
+# This value represents the number of files which have already been converted
 evol=0
+
+# This value represents the number of files which have to be converted
+number_of_files_to_convert=0
 
 # A boolean which will make the converter also work on subfolders if set to true
 recursive=0
@@ -58,22 +63,38 @@ function help_script(){
 # Else, then cat ls (recursively if asked by the user) | wc -l
 # This will give us the number of files which will have to be converted.
 
-# If number_of_files_to_be_converted > 50, then pop-up a message to prevent the user it's gonna be long.
+# If number_of_files_to_convert > 50, then pop-up a message to prevent the user it's gonna be long.
 function convert_CR2_to_JPG(){
-	for i in $1
-		do echo "Processing file $i";
-		filename=`basename $i .CR2`;
-		dcraw -T -w -c $filename.CR2 > $filename.tiff;
-		convert $filename.tiff $filename.jpg;
-		rm -v $filename.tiff
-		echo "Conversion done";
 
-		let progress=(100 * $evol)/`ls | wc -l`;
-		echo "Progress : " $progress "%";
-		let evol=$evol+1
-		echo "";
-	done;
+	if [ $# -eq 1 ]
+	then
+		number_of_files_to_convert=`cat $1 | wc -l`
+	else
+		number_of_files_to_convert=`ls -1 | wc -l`
+	fi
 
+	echo "The number of files to convert is : " $number_of_files_to_convert
+	echo "Please consider it takes nearly one minute per file."
+	echo "Are you sure to start conversion ? [y/n] "
+	read answ;
+
+	if [ $answ = "y" -o $answ = "Y" ]; then
+		for i in `cat $1`
+			do echo "Processing file $i";
+			filename=`basename $i .CR2`;
+			dcraw -T -w -c $filename.CR2 > $filename.tiff;
+			convert $filename.tiff $filename.jpg;
+			rm -v $filename.tiff
+			echo "Conversion done.";
+
+			let evol=$evol+1
+			let progress=(100 * $evol)/number_of_files_to_convert;
+			echo "Progress : " $progress "%";	
+			echo "";
+		done;
+	else
+		echo "Conversion process cancelled."
+	fi
 }
 
 
