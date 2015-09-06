@@ -11,6 +11,8 @@
 # 06/09/2015 # Managing both with and without    #
 #            # input text file for the converter #
 #            # function                          #
+#            # Installation of dcraw and         #
+#            # imagemagick                       #
 #            #                                   #
 # ############################################## #
 
@@ -21,6 +23,8 @@
 # TODO : Check if annex softwares are installed
 # TODO : Add a verbose option implementation
 # TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
+# TODO : Purpose the user sometimes to get admin rights to update softwares ?
+# TODO : Check out.txt and filtered.txt problem when running as root.
 
 
 #Global variables
@@ -57,6 +61,32 @@ function help_script(){
 	echo -e "-r : will convert recursively in subfolders, usefull only in the 0 argument case"
 	echo -e "-v : verbose"
 }
+
+# This function checks if the current user has root rights
+function check_root(){
+	if [ `id -u` -ne 0 ] 
+	then # Not root
+		return 1
+	else # Root
+		return 0
+	fi
+}
+
+# This function checks if needed softwares are installed
+function check_for_needed_softwares(){
+	check_root
+	if [ $? -eq 1 ];
+	then
+		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
+		command -v dcraw >/dev/null 2>&1 || echo >&2 "I require dcraw software but it is not installed. Please restart this script with root rights."
+		command -v convert >/dev/null 2>&1 || echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights."
+	else
+		# Root rights !! I am the master !! If some softwares are not installed, gonna install them.
+		command -v dcraw >/dev/null 2>&1 || echo >&2 "Installing dcraw..."; apt-get install dcraw
+		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick
+	fi
+}
+
 
 # This function is the main function of this script. Is manages the batch CR2 to JPG conversion
 # If $1 exists, then cat $1 | wc -l
@@ -105,8 +135,18 @@ function convert_CR2_to_JPG(){
 
 # First of all, check dcraw and convert softwares are installed
 # If not, return and ask admin rights to then install those softwares.
+check_for_needed_softwares
+if [ test ${PIPESTATUS[0]} -eq 1 ]; # FIXME
+then
+	exit 1;
+fi
 
 # Then, come back to normal. :)
+check_root
+if [ $? -eq 0 ];
+then
+	sudo -k # To lose root rights. Otherwise, root will own our files and that might be a mess...
+fi
 
 #extracts option values
 while getopts "h?rv" opt; do
