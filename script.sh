@@ -240,7 +240,7 @@ then
 	fi
 	# To make sure the input file contains only CR2 files, we first call extract_files function on CR2 format
 	extract_files $filtered_file $output_file "CR2"
-	sh convert_cr2_to_jpg.sh $output_file
+	bash convert_cr2_to_jpg.sh $output_file
 fi
 
 if [ $delete -eq 1 ]
