@@ -25,6 +25,7 @@
 # TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
 # TODO : Purpose the user sometimes to get admin rights to update softwares ?
 # TODO : Check out.txt and filtered.txt problem when running as root.
+# TODO : dcraw is already installed with imagemagick. So useless to check and install dcraw when installing imagemagick.
 
 
 #Global variables
