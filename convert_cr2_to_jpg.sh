@@ -14,17 +14,23 @@
 #            # Installation of dcraw and         #
 #            # imagemagick                       #
 #            #                                   #
+# 14/02/2016 # Remove root issue                 #
+#            # Correct number_of_fils_to_convert #
+#            # bug                               #
+#            # Change jpg to JPG as output value #
+#            # Time warning message only if more #
+#            # than 50 pictures to convert       #
 # ############################################## #
 
 
 # TODO Zone :
 # TODO : Implement a recursively converter
-# TODO : Implement a default comportment
 # TODO : Check if annex softwares are installed
 # TODO : Add a verbose option implementation
 # TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
 # TODO : Purpose the user sometimes to get admin rights to update softwares ?
 # TODO : Check out.txt and filtered.txt problem when running as root.
+# TODO : Add a renaming function (renaming by the date the picture was taken)
 
 
 #Global variables
@@ -86,43 +92,59 @@ function check_for_needed_softwares(){
 }
 
 
-# This function is the main function of this script. Is manages the batch CR2 to JPG conversion
+
 # If $1 exists, then cat $1 | wc -l
 # Else, then cat ls (recursively if asked by the user) | wc -l
 # This will give us the number of files which will have to be converted.
-
 # If number_of_files_to_convert > 50, then pop-up a message to prevent the user it's gonna be long.
+# And in all cases, this function calls the main converter function
 function convert_CR2_to_JPG(){
 
 	if [ $# -eq 1 ]
 	then
-		number_of_files_to_convert=`cat $1 | wc -l`
+		files=`cat $1`
+		number_of_files_to_convert=`cat $1 |wc -l`
 	else
-		number_of_files_to_convert=`ls -1 | wc -l`
+		#files=`$find . -name "*.CR2"`
+		files=`ls -1R *.CR2`
+		number_of_files_to_convert=`ls -1R *.CR2 |wc -l`
 	fi
 
-	echo "The number of files to convert is : " $number_of_files_to_convert
-	echo "Please consider it takes nearly one minute per file."
-	echo "Are you sure to start conversion ? [y/n] "
-	read answ;
+	echo "The number of files to convert is : "$number_of_files_to_convert
 
-	if [ $answ = "y" -o $answ = "Y" ]; then
-		for i in `cat $1`
-			do echo "Processing file $i";
-			filename=`basename $i .CR2`;
-			dcraw -T -w -c $filename.CR2 > $filename.tiff;
-			convert $filename.tiff $filename.jpg;
-			rm -v $filename.tiff
-			echo "Conversion done.";
+	if [ $number_of_files_to_convert -ge 50 ]
+	then	
+		echo "Please consider it takes nearly one minute per file."
+		echo "Are you sure to start conversion ? [y/n] "
+		read answ;
 
-			let evol=$evol+1
-			let progress=(100 * $evol)/number_of_files_to_convert;
-			echo "Progress : " $progress "%";	
-			echo "";
-		done;
+		if [ $answ = "y" -o $answ = "Y" ]; then
+			echo $files
+			convert_CR2_to_JPG_core $files
+		else
+			echo "Conversion process cancelled."
+		fi
 	else
-		echo "Conversion process cancelled."
+		convert_CR2_to_JPG_core $files
 	fi
+}
+
+# This function is the main function of this script. Is manages the batch CR2 to JPG conversion
+function convert_CR2_to_JPG_core(){
+
+	for i in $@
+		do echo "Processing file $i";
+		filename=`basename $i .CR2`;
+		dcraw -T -w -c $filename.CR2 > $filename.tiff;
+		convert $filename.tiff $filename.JPG;
+		rm -v $filename.tiff
+		echo "Conversion done.";
+
+		let evol=$evol+1
+		let progress=(100 * $evol)/number_of_files_to_convert;
+		echo "Progress : " $progress "%";	
+		echo "";
+	done;
 }
 
 
@@ -134,7 +156,7 @@ function convert_CR2_to_JPG(){
 # First of all, check dcraw and convert softwares are installed
 # If not, return and ask admin rights to then install those softwares.
 check_for_needed_softwares
-if [ ${PIPESTATUS[0]} -eq 1 ]; # FIXME
+if [ ${PIPESTATUS[0]} -eq 1 ];
 then
 	exit 1;
 fi
