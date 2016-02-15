@@ -25,7 +25,6 @@
 # TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
 # TODO : Purpose the user sometimes to get admin rights to update softwares ?
 # TODO : Check out.txt and filtered.txt problem when running as root.
-# TODO : dcraw is already installed with imagemagick. So useless to check and install dcraw when installing imagemagick.
 
 
 #Global variables
@@ -79,11 +78,9 @@ function check_for_needed_softwares(){
 	if [ $? -eq 1 ];
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
-		command -v dcraw >/dev/null 2>&1 || echo >&2 "I require dcraw software but it is not installed. Please restart this script with root rights."
 		command -v convert >/dev/null 2>&1 || echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights."
 	else
 		# Root rights !! I am the master !! If some softwares are not installed, gonna install them.
-		command -v dcraw >/dev/null 2>&1 || echo >&2 "Installing dcraw..."; apt-get install dcraw
 		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick
 	fi
 }
@@ -137,7 +134,7 @@ function convert_CR2_to_JPG(){
 # First of all, check dcraw and convert softwares are installed
 # If not, return and ask admin rights to then install those softwares.
 check_for_needed_softwares
-if [ test ${PIPESTATUS[0]} -eq 1 ]; # FIXME
+if [ ${PIPESTATUS[0]} -eq 1 ]; # FIXME
 then
 	exit 1;
 fi
