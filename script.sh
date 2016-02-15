@@ -65,7 +65,7 @@ filtered_file="filtered.txt"
 #A folder we can set to ignore a subdirectory in the current folder when calling look_for_files
 ignored_folder=""
 
-#The output file from a extract_[PictureFormat]_pictures call
+#The output file from a extract_format call
 output_file="out.txt"
 
 #A boolean which will generate a call to delete_files function if it is true
