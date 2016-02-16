@@ -15,23 +15,24 @@
 #            # imagemagick                       #
 #            #                                   #
 # 14/02/2016 # Remove root issue                 #
-#            # Correct number_of_fils_to_convert #
+#            # Correct number_of_files_to_convert#
 #            # bug                               #
 #            # Change jpg to JPG as output value #
 #            # Time warning message only if more #
 #            # than 50 pictures to convert       #
+# 15/02/2016 # Check for updates if we are root  #
+#            # + some doc                        #
 # ############################################## #
 
 
 # TODO Zone :
 # TODO : Implement a recursively converter
-# TODO : Check if annex softwares are installed
 # TODO : Add a verbose option implementation
 # TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
 # TODO : Purpose the user sometimes to get admin rights to update softwares ?
 # TODO : Check out.txt and filtered.txt problem when running as root.
 # TODO : Add a renaming function (renaming by the date the picture was taken)
-
+# TODO : Add the possibility to directly take into parameters the name of the CR2 files to be converted
 
 #Global variables
 
@@ -62,6 +63,7 @@ function help_script(){
 	echo -e "Usage : "
 	echo -e "Without any argument, will take the current directory and ls *.CR2 as a base for files"
 	echo -e "With one argument, will take this input to get CR2 files it will convert"
+	echo -e "If you launch this script with root rights, it will check for third parties software updates including imagemagick"
 	echo -e "Options :"
 	echo -e "-h : shows you this help"
 	echo -e "-r : will convert recursively in subfolders, usefull only in the 0 argument case"
@@ -86,11 +88,20 @@ function check_for_needed_softwares(){
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
 		command -v convert >/dev/null 2>&1 || echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights."
 	else
-		# Root rights !! I am the master !! If some softwares are not installed, gonna install them.
+		# Root rights. If some softwares are not installed, gonna install them.
 		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick
 	fi
 }
 
+# This functions checks if needed softwares could be updated
+function check_for_updates(){
+	check_root
+	if [ $? -eq 0 ];
+	then
+		# Root rights. Let's check if we have some updates on third parties softwares.
+		apt-get upgrade imagemagick
+	fi
+}
 
 
 # If $1 exists, then cat $1 | wc -l
@@ -153,13 +164,16 @@ function convert_CR2_to_JPG_core(){
 
 # script
 
-# First of all, check dcraw and convert softwares are installed
+# First of all, check imagemagick software is installed
 # If not, return and ask admin rights to then install those softwares.
 check_for_needed_softwares
 if [ ${PIPESTATUS[0]} -eq 1 ];
 then
 	exit 1;
 fi
+
+# Then, check if it exists some upgrades
+check_for_updates
 
 # Then, come back to normal. :)
 check_root
@@ -184,7 +198,7 @@ done
 
 shift $((OPTIND-1))
 
-
+# And finally call the CR2 to JPG converter script
 if [ $# -eq 1 ]
 then
 	convert_CR2_to_JPG $1
