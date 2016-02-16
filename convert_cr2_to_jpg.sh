@@ -29,8 +29,6 @@
 # TODO : Implement a recursively converter
 # TODO : Add a verbose option implementation
 # TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
-# TODO : Purpose the user sometimes to get admin rights to update softwares ?
-# TODO : Check out.txt and filtered.txt problem when running as root.
 # TODO : Add a renaming function (renaming by the date the picture was taken)
 # TODO : Add the possibility to directly take into parameters the name of the CR2 files to be converted
 
