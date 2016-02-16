@@ -151,7 +151,7 @@ function extract_JPG_pictures() {
 function extract_files() {
 	grep -E -x -i "^.*\.($3)$" $1 > $2
 
-	echo "`cat $2 | wc -l` $3 file(s) have been grep in the $2 file.";
+	echo "`cat $2 | wc -l` $3 file(s) have been grepped in the $2 file.";
 }
 
 
