@@ -140,13 +140,40 @@ function convert_CR2_to_JPG(){
 
 # This function is the main function of this script. Is manages the batch CR2 to JPG conversion
 function convert_CR2_to_JPG_core(){
-
+	
 	for i in $@
 		do echo "Processing file $i";
 		filename=`basename $i .CR2`;
-		dcraw -T -w -c $filename.CR2 > $filename.tiff;
-		convert $filename.tiff $filename.JPG;
-		rm -v $filename.tiff
+		
+		#Version 1
+		# dcraw -T -w -c $filename.CR2 > $filename.tiff;
+		# convert $filename.tiff $filename.JPG;
+		# rm $filename.tiff
+		# mv $filename.JPG V1
+		
+		#Version 2
+		# dcraw -T $filename.CR2 > $filename.tiff;
+		# convert $filename.tiff $filename.JPG;
+		# rm $filename.tiff
+		# mv $filename.JPG V2
+		
+		# Version 3 : the better one when pictures are taken in an outside context
+		dcraw -c -q 3 -a -w -H 5 -b 5 $filename.CR2 > $filename.tiff
+		cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG;
+		rm $filename.tiff
+		
+		# Version 4
+		# dcraw -t 0 -c -w -o 1 -v -h $filename.CR2 > $filename.tiff
+		# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG
+		# rm $filename.tiff
+		# mv $filename.JPG V4
+		
+		# Version 5
+		# dcraw -c -q 0 -w -H 5 -b 8 $filename.CR2 > $filename.tiff
+		# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG
+		# rm $filename.tiff
+		# mv $filename.JPG V5
+		
 		echo "Conversion done.";
 
 		let evol=$evol+1
@@ -156,7 +183,7 @@ function convert_CR2_to_JPG_core(){
 	done;
 }
 
-
+# exiftool -overwrite_original -tagsFromFile "$i" "$newname"
 
 # ------------------------------------------------------------------------------------
 
