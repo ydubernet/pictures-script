@@ -85,9 +85,12 @@ function check_for_needed_softwares(){
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
 		command -v convert >/dev/null 2>&1 || echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights."
+		command -v convert >/dev/null 2>&1 || echo >&2 "I require libjpg-progs library but it is not installed. Please restart this script with root rights."
+
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
 		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick
+		command -v convert >/dev/null 2>&1 || echo >&2 "Installing libjpg-progs..."; apt-get install libjpg-progs
 	fi
 }
 
@@ -159,7 +162,7 @@ function convert_CR2_to_JPG_core(){
 		
 		# Version 3 : the better one when pictures are taken in an outside context
 		dcraw -c -q 3 -a -w -H 5 -b 5 $filename.CR2 > $filename.tiff
-		cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG;
+		cjpeg -quality 95 -optimize -progressive $filename.tiff > $filename.JPG;
 		rm $filename.tiff
 		
 		# Version 4
