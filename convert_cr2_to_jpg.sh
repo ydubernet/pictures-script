@@ -22,6 +22,7 @@
 #            # than 50 pictures to convert       #
 # 15/02/2016 # Check for updates if we are root  #
 #            # + some doc                        #
+# 28/02/2016 # Add libjpg for the cjpg program   #
 # ############################################## #
 
 
@@ -31,6 +32,8 @@
 # TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
 # TODO : Add a renaming function (renaming by the date the picture was taken)
 # TODO : Add the possibility to directly take into parameters the name of the CR2 files to be converted
+# TODO : Solve the issue when the script says it needs an external library but continues to run.
+# TODO : Add an option to set the Author name with exiftool
 
 #Global variables
 
@@ -85,12 +88,14 @@ function check_for_needed_softwares(){
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
 		command -v convert >/dev/null 2>&1 || echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights."
-		command -v convert >/dev/null 2>&1 || echo >&2 "I require libjpg-progs library but it is not installed. Please restart this script with root rights."
-
+		command -v cjpeg >/dev/null 2>&1 || echo >&2 "I require libjpg-progs library but it is not installed. Please restart this script with root rights."
+		command -v exiftool >/dev/null 2>&1 || echo >&2 "I require exiftool library but is is not installed. Please restart this script with root rights."
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
 		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick
-		command -v convert >/dev/null 2>&1 || echo >&2 "Installing libjpg-progs..."; apt-get install libjpg-progs
+		command -v cjpeg >/dev/null 2>&1 || echo >&2 "Installing libjpg-progs..."; apt-get install libjpg-progs
+		command -v exiftool >/dev/null 2>&1 || echo >&2 "Installing exiftoll..."; apt-get install libimage-exiftool-perl
+
 	fi
 }
 
@@ -101,9 +106,10 @@ function check_for_updates(){
 	then
 		# Root rights. Let's check if we have some updates on third parties softwares.
 		apt-get upgrade imagemagick
+		apt-get upgrade libjpg-progs
+		apt-get upgrade libimage-exiftool-perl
 	fi
 }
-
 
 # If $1 exists, then cat $1 | wc -l
 # Else, then cat ls (recursively if asked by the user) | wc -l
@@ -163,6 +169,10 @@ function convert_CR2_to_JPG_core(){
 		# Version 3 : the better one when pictures are taken in an outside context
 		dcraw -c -q 3 -a -w -H 5 -b 5 $filename.CR2 > $filename.tiff
 		cjpeg -quality 95 -optimize -progressive $filename.tiff > $filename.JPG;
+		exiftool -overwrite_original -tagsFromFile "$filename.CR2" "$filename.JPG"
+		#exiftool '-filename<CreateDate' -d %Y-%m-%d_%H-%M-%S_%%f%%-c.%%ue -r -ext CR2 . # To rename files by the creation date
+	    #exiftool -b -PreviewImage -w _preview.jpg -ext cr2 -r . # To extract the JPG preview image of a raw
+
 		rm $filename.tiff
 		
 		# Version 4
@@ -185,8 +195,6 @@ function convert_CR2_to_JPG_core(){
 		echo "";
 	done;
 }
-
-# exiftool -overwrite_original -tagsFromFile "$i" "$newname"
 
 # ------------------------------------------------------------------------------------
 
