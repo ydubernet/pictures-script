@@ -35,6 +35,7 @@
 # TODO : Solve the issue when the script says it needs an external library but continues to run.
 # TODO : Add an option to set the Author name with exiftool
 
+
 #Global variables
 
 #A POSIX variable
@@ -172,7 +173,6 @@ function convert_CR2_to_JPG_core(){
 		exiftool -overwrite_original -tagsFromFile "$filename.CR2" "$filename.JPG"
 		#exiftool '-filename<CreateDate' -d %Y-%m-%d_%H-%M-%S_%%f%%-c.%%ue -r -ext CR2 . # To rename files by the creation date
 	    #exiftool -b -PreviewImage -w _preview.jpg -ext cr2 -r . # To extract the JPG preview image of a raw
-
 		rm $filename.tiff
 		
 		# Version 4
