@@ -3,7 +3,7 @@
 # This script is a tool to manage a lot of files depending on some formats.
 # It mainly logs them, but if an option is set, it also can perform write operations such as deletes.
 
-# © Copyright 2014-2015 - Yoann DUBERNET - yoann [dot] dubernet [ at ] gmail.com
+# © Copyright 2014-2015-2016 - Yoann DUBERNET - yoann [dot] dubernet [ at ] gmail.com
 
 # ############################################## #
 #    Date    #            Remark                 #
@@ -34,47 +34,49 @@
 #            # Generic format extracting type    # 
 # 04/09/2015 # Working on CR2 to JPG converter   #
 #            # algorithm                         #
+# 07/03/2016 # Adding metadata option to call    #
+#            # the metadata script               #
 # ############################################## #
 
 
 # TODO Zone :
 
-# TODO : Solve the space problems so that we could execute this script without renaming all repositories
 # TODO : Choose a license
-# TODO : Take into parameter the location of the pictures software so that the user could launch the script from everywhere
 # TODO : Permit the user to look for files non recursively
 # TODO : Think about deleting input_file as an option to get it as an input of the script
 # TODO : At the end, move all txt files into a log directory and name them by date
-# TODO : Add a rename function which would rename a file by its creation date value
 
 
-#Global variables
-#The counter variable counts how many operations succeeded.
+# Global variables
+# The counter variable counts how many operations succeeded.
 counter=0;
 
-#A POSIX variable
+# A POSIX variable
 OPTIND=1               # Reset in case getopts has been used previously in the shell.
 
-#The files format the user wants to work on
+# The files format the user wants to work on
 extract_format=""
 
-#The input file the user can set to work on a given content
+# The input file the user can set to work on a given content
 input_file=""
 
-#The output file from an look_for_files call 
+# The output file from an look_for_files call 
 filtered_file="filtered.txt"
 
-#A folder we can set to ignore a subdirectory in the current folder when calling look_for_files
+# A folder we can set to ignore a subdirectory in the current folder when calling look_for_files
 ignored_folder=""
 
-#The output file from a extract_format call
+# The output file from a extract_format call
 output_file="out.txt"
 
-#A boolean which will generate a call to delete_files function if it is true
+# A boolean which will generate a call to delete_files function if it is true
 delete=0
 
-#A boolean which will make a call to convert CR2 to JPG batch if it is true
+# A boolean which will make a call to convert CR2 to JPG batch if it is true
 convert=0
+
+# An option to launch the metadata script in copy or delete mode
+metadata=1
 
 # -------------------------------------------------------------------------------------------------------------------------
 # Functions :
@@ -94,6 +96,7 @@ function help_script() {
     echo -e "-o output_file : to set another output file name than the default out.txt one"
     echo -e "-c : Will call a script which converts CR2 to JPG files"
     echo -e "-d : Will delete the output file listed content (after asking confirmation, of course). So BE CAREFULL using it."
+    echo -e "-m : will remove metadata from the list of output files"
 }
 
 # This function deletes all the temporary files before starting the important job.
@@ -183,7 +186,7 @@ function look_for_files() {
 delete_temporary_files
 
 #extracts option values
-while getopts "h?e:i:f:o:dc" opt; do
+while getopts "h?e:i:f:o:dcm" opt; do
     case "$opt" in
     h|\?)
         help_script
@@ -206,6 +209,9 @@ while getopts "h?e:i:f:o:dc" opt; do
 		;;
 	c)
 		convert=1
+		;;
+	m)  
+        metadata=0
 		;;
     esac
 done
@@ -238,11 +244,27 @@ if [ $convert -eq 1 ]
 then
 	if [ -f $output_file ]
 	then
-		output_file="CR2$output_file" # To avoid overriding previous output file
+		cr2output_file="CR2$output_file" # To avoid overriding previous output file
 	fi
 	# To make sure the input file contains only CR2 files, we first call extract_files function on CR2 format
-	extract_files $filtered_file $output_file "CR2"
-	bash convert_cr2_to_jpg.sh $output_file
+	extract_files $filtered_file $cr2output_file "CR2"
+
+	if [ $metadata -eq 1 ]
+	then 
+		# Default : we copy metadata to the generated JPG files
+		bash convert_cr2_to_jpg.sh -m "copy" $cr2output_file
+	else
+		# We remove metadata from the generated JPG files
+		bash convert_cr2_to_jpg.sh -m "remove" $cr2output_file
+	fi
+
+# TODO : Uncomment this little code once I have dealted with it in the metadata_tools script
+#else
+	# We already deal with metadata in the converter
+	#if [ $metada -eq 0 ]
+	#then
+	#	bash metadata_tools.sh 0 $output_file
+	#fi
 fi
 
 if [ $delete -eq 1 ]

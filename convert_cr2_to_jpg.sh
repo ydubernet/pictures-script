@@ -2,7 +2,7 @@
 
 # This script is a batch to do batch CR2 to JPG conversion
 
-# © Copyright 2015 - Yoann DUBERNET - yoann [dot] dubernet [ at ] gmail.com
+# © Copyright 2015-2016 - Yoann DUBERNET - yoann [dot] dubernet [ at ] gmail.com
 
 # ############################################## #
 #    Date    #            Remark                 #
@@ -22,7 +22,15 @@
 #            # than 50 pictures to convert       #
 # 15/02/2016 # Check for updates if we are root  #
 #            # + some doc                        #
-# 28/02/2016 # Add libjpg for the cjpg program   #
+# 28/02/2016 # Add libjpeg for the cjpg program  #
+#            #                                   #
+# 06/03/2016 # Dealing with metadatas by adding  #
+#            # possibility to remove them        #
+#            #                                   #
+# 09/03/2016 # Move metadatas code to a new      #
+#            # script in order to make it usable #
+#            # without necessarly needing to     #
+#            # convert                           #
 # ############################################## #
 
 
@@ -34,11 +42,12 @@
 # TODO : Add the possibility to directly take into parameters the name of the CR2 files to be converted
 # TODO : Solve the issue when the script says it needs an external library but continues to run.
 # TODO : Add an option to set the Author name with exiftool
+# TODO : A chown to be sure root does not own output files if runned in root mode ? Or quit the program once installed
 
 
-#Global variables
+# Global variables
 
-#A POSIX variable
+# A POSIX variable
 OPTIND=1               # Reset in case getopts has been used previously in the shell.
 
 # This value represents the number of files which have already been converted
@@ -52,6 +61,9 @@ recursive=0
 
 # A boolean which will ask our tool to be verbose for the user if set to true
 verbose=0
+
+# An option to launch the metadata script in copy or delete mode
+metadata=""
 
 
 # -------------------------------------------------------------------------------------------------------------------------
@@ -70,6 +82,8 @@ function help_script(){
 	echo -e "-h : shows you this help"
 	echo -e "-r : will convert recursively in subfolders, usefull only in the 0 argument case"
 	echo -e "-v : verbose"
+	echo -e "-m [[c]opy] : copies metadata of the input CR2 to the output JPG picture"
+	echo -e "-m d[elete] : deletes metadata of the output JPG picture"
 }
 
 # This function checks if the current user has root rights
@@ -89,14 +103,11 @@ function check_for_needed_softwares(){
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
 		command -v convert >/dev/null 2>&1 || echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights."
-		command -v cjpeg >/dev/null 2>&1 || echo >&2 "I require libjpg-progs library but it is not installed. Please restart this script with root rights."
-		command -v exiftool >/dev/null 2>&1 || echo >&2 "I require exiftool library but is is not installed. Please restart this script with root rights."
+		command -v cjpeg >/dev/null 2>&1 || echo >&2 "I require libjpeg-progs library but it is not installed. Please restart this script with root rights."
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
 		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick
-		command -v cjpeg >/dev/null 2>&1 || echo >&2 "Installing libjpg-progs..."; apt-get install libjpg-progs
-		command -v exiftool >/dev/null 2>&1 || echo >&2 "Installing exiftoll..."; apt-get install libimage-exiftool-perl
-
+		command -v cjpeg >/dev/null 2>&1 || echo >&2 "Installing libjpeg-progs..."; apt-get install libjpeg-progs
 	fi
 }
 
@@ -107,8 +118,7 @@ function check_for_updates(){
 	then
 		# Root rights. Let's check if we have some updates on third parties softwares.
 		apt-get upgrade imagemagick
-		apt-get upgrade libjpg-progs
-		apt-get upgrade libimage-exiftool-perl
+		apt-get upgrade libjpeg-progs
 	fi
 }
 
@@ -155,37 +165,38 @@ function convert_CR2_to_JPG_core(){
 		do echo "Processing file $i";
 		filename=`basename $i .CR2`;
 		
-		#Version 1
+		# Version 1
 		# dcraw -T -w -c $filename.CR2 > $filename.tiff;
 		# convert $filename.tiff $filename.JPG;
-		# rm $filename.tiff
-		# mv $filename.JPG V1
 		
-		#Version 2
+		# Version 2
 		# dcraw -T $filename.CR2 > $filename.tiff;
 		# convert $filename.tiff $filename.JPG;
-		# rm $filename.tiff
-		# mv $filename.JPG V2
 		
 		# Version 3 : the better one when pictures are taken in an outside context
 		dcraw -c -q 3 -a -w -H 5 -b 5 $filename.CR2 > $filename.tiff
 		cjpeg -quality 95 -optimize -progressive $filename.tiff > $filename.JPG;
-		exiftool -overwrite_original -tagsFromFile "$filename.CR2" "$filename.JPG"
-		#exiftool '-filename<CreateDate' -d %Y-%m-%d_%H-%M-%S_%%f%%-c.%%ue -r -ext CR2 . # To rename files by the creation date
-	    #exiftool -b -PreviewImage -w _preview.jpg -ext cr2 -r . # To extract the JPG preview image of a raw
 		rm $filename.tiff
 		
 		# Version 4
 		# dcraw -t 0 -c -w -o 1 -v -h $filename.CR2 > $filename.tiff
 		# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG
-		# rm $filename.tiff
-		# mv $filename.JPG V4
 		
 		# Version 5
 		# dcraw -c -q 0 -w -H 5 -b 8 $filename.CR2 > $filename.tiff
 		# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG
-		# rm $filename.tiff
-		# mv $filename.JPG V5
+
+
+		# And we add metadata management
+		if [ "$metadata" == "copy" ] || [ "$metadata" == "c" ] || [ "$metadata" == "" ]
+		then
+			bash metadata_tools.sh $filename.CR2 $filename.JPG
+		fi
+
+		if [ "$metadata" == "delete" ] || [ "$metadata" == "d" ]
+		then
+			bash metadata_tools.sh $filename.JPG
+		fi
 		
 		echo "Conversion done.";
 
@@ -199,6 +210,24 @@ function convert_CR2_to_JPG_core(){
 # ------------------------------------------------------------------------------------
 
 # script
+
+#extracts option values
+while getopts "h?rm:v" opt; do
+    case "$opt" in
+    h|\?)
+        help_script
+        exit 0
+        ;;
+	r)  recursive=1
+		;;
+	v)  verbose=1
+		;;
+	m)  metadata=$OPTARG
+		;;
+    esac
+done
+
+shift $((OPTIND-1))
 
 # First of all, check imagemagick software is installed
 # If not, return and ask admin rights to then install those softwares.
@@ -217,22 +246,6 @@ if [ $? -eq 0 ];
 then
 	sudo -k # To lose root rights. Otherwise, root will own our files and that might be a mess...
 fi
-
-#extracts option values
-while getopts "h?rv" opt; do
-    case "$opt" in
-    h|\?)
-        help_script
-        exit 0
-        ;;
-	r)  recursive=1
-		;;
-	v)  verbose=1
-		;;
-    esac
-done
-
-shift $((OPTIND-1))
 
 # And finally call the CR2 to JPG converter script
 if [ $# -eq 1 ]
