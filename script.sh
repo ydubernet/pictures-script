@@ -45,6 +45,7 @@
 # TODO : Permit the user to look for files non recursively
 # TODO : Think about deleting input_file as an option to get it as an input of the script
 # TODO : At the end, move all txt files into a log directory and name them by date
+# TODO : Solve the issue with the -i option
 
 
 # Global variables
@@ -85,7 +86,6 @@ metadata=1
 # DO NOT FORGET TO EDIT THE HELP WHEN YOU ADD/REMOVE a tool.
 function help_script() {
 	echo -e "This script is a little tool to help you gain some time in managing pictures."
-	echo -e "In its version 0.2, an option tool has been implemented, which makes this script a little bit more user-friendly."
 	echo -e "Default comportment : this script will grep all jpg files and put them in a out.txt file."
 	echo -e "Options :"
 	echo -e "-h : shows you this help"
@@ -95,8 +95,8 @@ function help_script() {
 		    directory but ignoring the avoided subdirectory"	
     echo -e "-o output_file : to set another output file name than the default out.txt one"
     echo -e "-c : Will call a script which converts CR2 to JPG files"
+    echo -e "-m : Used with -c, will remove metadata from the list of output files"
     echo -e "-d : Will delete the output file listed content (after asking confirmation, of course). So BE CAREFULL using it."
-    echo -e "-m : will remove metadata from the list of output files"
 }
 
 # This function deletes all the temporary files before starting the important job.
@@ -257,14 +257,6 @@ then
 		# We remove metadata from the generated JPG files
 		bash convert_cr2_to_jpg.sh -m "remove" $cr2output_file
 	fi
-
-# TODO : Uncomment this little code once I have dealted with it in the metadata_tools script
-#else
-	# We already deal with metadata in the converter
-	#if [ $metada -eq 0 ]
-	#then
-	#	bash metadata_tools.sh 0 $output_file
-	#fi
 fi
 
 if [ $delete -eq 1 ]
