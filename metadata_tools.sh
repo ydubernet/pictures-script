@@ -8,16 +8,22 @@
 #    Date    #            Remark                 #
 # 09/03/2016 # First version                     #
 #            # Help function                     #
+# 11/03/2016 # Adding possibility to rename      #
+#            # regarding the creation date       #
 # ############################################## #
 
 
 # TODO Zone :
+# TODO : Renaming should also be available for CR2. That is not the case for the moment (only output JPG files)
+# -> Move the code in a new sh file.
 
-#Global variables
+# Global variables :
 
-#A POSIX variable
-OPTIND=1               # Reset in case getopts has been used previously in the shell
+# Default rename format rule
+rename_format="%Y-%m-%d_%H-%M-%S_%%f%%-c.%%ue"
 
+# A boolean to know if the script has to rename files or not
+rename=0
 
 # -------------------------------------------------------------------------------------------------------------------------
 # Functions :
@@ -33,6 +39,9 @@ function help_script(){
 	echo -e "If you launch this script with root rights, it will check for third parties software updates including exiftool"
 	echo -e "Options :"
 	echo -e "-h : shows you this help"
+	echo -e "-c rename_pattern : Rename your file by its creation date (see exiftool documentation for more help about available renaming functions)"
+	echo -e "-C : Rename your file by its creation date to the following format : $rename_format"
+	echo -e "  /!\ It is possible to use the renaming option if your use this script to remove metadata but please notice that the renaming output must be wrong..."
 }
 
 
@@ -69,32 +78,57 @@ function check_for_updates(){
 	fi
 }
 
-#exiftool '-filename<CreateDate' -d %Y-%m-%d_%H-%M-%S_%%f%%-c.%%ue -r -ext CR2 . # To rename files by the creation date
-#exiftool -b -PreviewImage -w _preview.jpg -ext cr2 -r . # To extract the JPG preview image of a raw
-
 # ------------------------------------------------------------------------------------
 
 # script
 
 #extracts option values
-while getopts "h?" opt; do
+while getopts "h?Cc:" opt; do
     case "$opt" in
     h|\?)
         help_script
         exit 0
         ;;
+    c)
+		rename_format=$OPTARG
+		rename=1
+		;;
+	C)
+		rename=1		
+		;;
     esac
 done
 
-# shift $((OPTIND-1))
+shift $((OPTIND-1))
 
-# Call the exiftool library
 if [ $# -eq 1 ]; then
-	# Remove metadata from the considered file
-	exiftool -all= $1
+	output_file=$1
 elif [ $# -eq 2 ]; then
-	# Copy all metadata from the first parameter to the second parameter
-	exiftool -overwrite_original -tagsFromFile $1 $2
+	output_file=$2
 fi
 
-# And that's all !
+# Call the exiftool library
+
+# First of all, copy or remove metadata
+if [ $# -eq 1 ]; then
+	# Remove metadata from the considered file
+	echo "Removing metadata of $output_file"
+	exiftool -all= $output_file
+elif [ $# -eq 2 ]; then
+	# Copy all metadata from the first parameter to the second parameter
+	echo "Copying metadata from $1 to $output_file"
+	exiftool -overwrite_original -tagsFromFile $1 $output_file
+fi
+
+# Secondly, rename regarding metadata creation data value
+if [ $rename -eq 1 ]; then
+	# Rename the file regarding its creation date
+	echo "Renaming the file $output_file regarding its creation date"
+	exiftool '-filename<CreateDate' -d $rename_format $output_file
+fi
+
+
+
+
+#exiftool -b -PreviewImage -w _preview.jpg -ext cr2 -r . # To extract the JPG preview image of a raw
+

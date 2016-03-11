@@ -36,9 +36,7 @@
 
 # TODO Zone :
 # TODO : Implement a recursively converter
-# TODO : Add a verbose option implementation
 # TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
-# TODO : Add a renaming function (renaming by the date the picture was taken)
 # TODO : Add the possibility to directly take into parameters the name of the CR2 files to be converted
 # TODO : Solve the issue when the script says it needs an external library but continues to run.
 # TODO : Add an option to set the Author name with exiftool
@@ -59,11 +57,14 @@ number_of_files_to_convert=0
 # A boolean which will make the converter also work on subfolders if set to true
 recursive=0
 
-# A boolean which will ask our tool to be verbose for the user if set to true
-verbose=0
-
 # An option to launch the metadata script in copy or delete mode
 metadata=""
+
+# A boolean to know if the script has to rename files or not
+rename=0
+
+# Rename format rule
+rename_format="%Y-%m-%d_%H-%M-%S_%%f%%-c.%%ue"
 
 
 # -------------------------------------------------------------------------------------------------------------------------
@@ -81,9 +82,10 @@ function help_script(){
 	echo -e "Options :"
 	echo -e "-h : shows you this help"
 	echo -e "-r : will convert recursively in subfolders, usefull only in the 0 argument case"
-	echo -e "-v : verbose"
 	echo -e "-m [[c]opy] : copies metadata of the input CR2 to the output JPG picture"
 	echo -e "-m d[elete] : deletes metadata of the output JPG picture"
+	echo -e "-c rename_pattern : Rename your file by its creation date (see exiftool documentation for more help about available renaming functions)"
+	echo -e "-C : Rename your file by its creation date to the following format : $rename_format"
 }
 
 # This function checks if the current user has root rights
@@ -190,7 +192,11 @@ function convert_CR2_to_JPG_core(){
 		# And we add metadata management
 		if [ "$metadata" == "copy" ] || [ "$metadata" == "c" ] || [ "$metadata" == "" ]
 		then
-			bash metadata_tools.sh $filename.CR2 $filename.JPG
+			if [ $rename -eq 1 ]; then
+				bash metadata_tools.sh -c $rename_format $filename.CR2 $filename.JPG
+			else
+				bash metadata_tools.sh $filename.CR2 $filename.JPG
+			fi
 		fi
 
 		if [ "$metadata" == "delete" ] || [ "$metadata" == "d" ]
@@ -212,17 +218,24 @@ function convert_CR2_to_JPG_core(){
 # script
 
 #extracts option values
-while getopts "h?rm:v" opt; do
+while getopts "h?rm:c:C" opt; do
     case "$opt" in
     h|\?)
         help_script
         exit 0
         ;;
-	r)  recursive=1
+	r)  
+		recursive=1
 		;;
-	v)  verbose=1
+	m)  
+		metadata=$OPTARG
 		;;
-	m)  metadata=$OPTARG
+	c)  
+		rename=1
+		rename_format=$OPTARG
+		;;
+	C)
+		rename=1
 		;;
     esac
 done
