@@ -31,6 +31,7 @@
 #            # script in order to make it usable #
 #            # without necessarly needing to     #
 #            # convert                           #
+# 13/03/2016 # Remove any call to a rename script#
 # ############################################## #
 
 
@@ -60,13 +61,6 @@ recursive=0
 # An option to launch the metadata script in copy or delete mode
 metadata=""
 
-# A boolean to know if the script has to rename files or not
-rename=0
-
-# Rename format rule
-rename_format="%Y-%m-%d_%H-%M-%S_%%f%%-c.%%ue"
-
-
 # -------------------------------------------------------------------------------------------------------------------------
 # Functions :
 
@@ -82,10 +76,8 @@ function help_script(){
 	echo -e "Options :"
 	echo -e "-h : shows you this help"
 	echo -e "-r : will convert recursively in subfolders, usefull only in the 0 argument case"
-	echo -e "-m [[c]opy] : copies metadata of the input CR2 to the output JPG picture"
+	echo -e "[-m [[c]opy]] : copies metadata of the input CR2 to the output JPG picture (default)"
 	echo -e "-m d[elete] : deletes metadata of the output JPG picture"
-	echo -e "-c rename_pattern : Rename your file by its creation date (see exiftool documentation for more help about available renaming functions)"
-	echo -e "-C : Rename your file by its creation date to the following format : $rename_format"
 }
 
 # This function checks if the current user has root rights
@@ -192,11 +184,7 @@ function convert_CR2_to_JPG_core(){
 		# And we add metadata management
 		if [ "$metadata" == "copy" ] || [ "$metadata" == "c" ] || [ "$metadata" == "" ]
 		then
-			if [ $rename -eq 1 ]; then
-				bash metadata_tools.sh -c $rename_format $filename.CR2 $filename.JPG
-			else
-				bash metadata_tools.sh $filename.CR2 $filename.JPG
-			fi
+			bash metadata_tools.sh $filename.CR2 $filename.JPG
 		fi
 
 		if [ "$metadata" == "delete" ] || [ "$metadata" == "d" ]
@@ -218,7 +206,7 @@ function convert_CR2_to_JPG_core(){
 # script
 
 #extracts option values
-while getopts "h?rm:c:C" opt; do
+while getopts "h?rm:" opt; do
     case "$opt" in
     h|\?)
         help_script
@@ -229,13 +217,6 @@ while getopts "h?rm:c:C" opt; do
 		;;
 	m)  
 		metadata=$OPTARG
-		;;
-	c)  
-		rename=1
-		rename_format=$OPTARG
-		;;
-	C)
-		rename=1
 		;;
     esac
 done

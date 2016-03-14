@@ -6,18 +6,30 @@
 
 # ############################################## #
 #    Date    #            Remark                 #
-# 09/03/2016 # First version                     #
+# 01/03/2016 # First version                     #
 #            # Help function                     #
-# 11/03/2016 # Adding possibility to rename      #
-#            # regarding the creation date       #
-# 13/03/2016 # Remove the rename functionality   #
 # ############################################## #
+
+# Official documentation : 
+#  http://www.sno.phy.queensu.ca/~phil/exiftool/filename.html
+#  http://ninedegreesbelow.com/photography/exiftool-commands.html
 
 
 # TODO Zone :
-# TODO : Same way of running than rename_tools
 
 # Global variables :
+
+# A POSIX variable
+OPTIND=1               # Reset in case getopts has been used previously in the shell.
+
+# Default rename format rule
+rename_format="%Y-%m-%d_%H-%M-%S_%%f%%-c.%%ue"
+
+# A boolean to know if the script has to rename on subdirectories or not
+recursive=0
+
+# Extension of the files which will be renamed
+extension=""
 
 # -------------------------------------------------------------------------------------------------------------------------
 # Functions :
@@ -26,13 +38,17 @@
 # This function explains to the user everything he can do with this script
 # DO NOT FORGET TO EDIT THE HELP WHEN YOU ADD/REMOVE a tool.
 function help_script(){
-	echo -e "This script is a little tool to do manage your pictures metadata"
+	echo -e "This script is a little tool to do rename your pictures regarding their metadata"
 	echo -e "Usage : "
-	echo -e "With one argument, removes metadata from the filename passed as an argument"
-	echo -e "With two arguments, will take this input to get CR2 files it will convert"
+	echo -e "Not any argument : all the pictures of the current directory will be renamed"
+	echo -e "1 Argument : the name of the picture you want to rename"
 	echo -e "If you launch this script with root rights, it will check for third parties software updates including exiftool"
 	echo -e "Options :"
 	echo -e "-h : shows you this help"
+	echo -e "-p rename_pattern : Override renaming pattern (see exiftool documentation for more help about available renaming patterns)"
+	echo -e "                    The default rename pattern is : $rename_format"
+	echo -e "-r : rename on the current directory and all its subdirectories (ignored if you give an argument)"
+	echo -e "-e : extension : Usefull in order to set the extension of files you want to rename, if many extensions are in the directory or its subdirectories"
 }
 
 
@@ -69,38 +85,48 @@ function check_for_updates(){
 	fi
 }
 
+
 # ------------------------------------------------------------------------------------
 
 # script
 
 #extracts option values
-while getopts "h?" opt; do
+while getopts "h?p:re:" opt; do
     case "$opt" in
     h|\?)
         help_script
         exit 0
         ;;
+ 	p)
+		rename_format=$OPTARG
+		;;
+	r)
+		recursive=1
+		;;
+	e)
+		extension=$OPTARG
+		;;
     esac
 done
 
-#shift $((OPTIND-1))
+shift $((OPTIND-1))
 
+options=""
 
-# Call the exiftool library
-
-# First of all, copy or remove metadata
-if [ $# -eq 1 ]; then
-	# Remove metadata from the considered file
-	echo "Removing metadata of $1"
-	exiftool -overwrite_original -all= $1
-elif [ $# -eq 2 ]; then
-	# Copy all metadata from the first parameter to the second parameter
-	echo "Copying metadata from $1 to $2"
-	exiftool -overwrite_original -tagsFromFile $1 $2
+if [ "$extension" != "" ]; then
+	options="$options -ext $extension "
+fi
+if [ $recursive -eq 1 ] && [ $# -eq 0 ]; then
+	# Not recursive option if the script is runned for only one picture
+	options="$options -r "
 fi
 
+echo "Options : " $options
 
-
-
-#exiftool -b -PreviewImage -w _preview.jpg -ext cr2 -r . # To extract the JPG preview image of a raw
-
+if [ $# -eq 1 ]; then
+	#echo "Renaming the file $1 regarding its creation date"
+	exiftool '-filename<CreateDate' $options -d $rename_format $1
+else
+	#echo "Renaming all files in current and subdirectories regarding their creation date"
+	exiftool '-filename<CreateDate' $options -d $rename_format .
+fi
