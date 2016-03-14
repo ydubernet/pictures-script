@@ -41,7 +41,6 @@
 
 # TODO Zone :
 
-# TODO : Choose a license
 # TODO : Permit the user to look for files non recursively
 # TODO : Think about deleting input_file as an option to get it as an input of the script
 # TODO : At the end, move all txt files into a log directory and name them by date

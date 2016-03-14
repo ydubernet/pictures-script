@@ -121,8 +121,6 @@ if [ $recursive -eq 1 ] && [ $# -eq 0 ]; then
 	options="$options -r "
 fi
 
-echo "Options : " $options
-
 if [ $# -eq 1 ]; then
 	#echo "Renaming the file $1 regarding its creation date"
 	exiftool '-filename<CreateDate' $options -d $rename_format $1
