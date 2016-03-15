@@ -32,16 +32,19 @@
 #            # without necessarly needing to     #
 #            # convert                           #
 # 13/03/2016 # Remove any call to a rename script#
+#            #                                   #
+# 15/03/2016 # Possible to take into parameter   #
+#            # names of CR2 files to be converted#
 # ############################################## #
 
 
 # TODO Zone :
 # TODO : Implement a recursively converter
 # TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
-# TODO : Add the possibility to directly take into parameters the name of the CR2 files to be converted
 # TODO : Solve the issue when the script says it needs an external library but continues to run.
 # TODO : Add an option to set the Author name with exiftool
 # TODO : A chown to be sure root does not own output files if runned in root mode ? Or quit the program once installed
+# TODO : Add an ignore in the main converter function if the file is not a CR2
 
 
 # Global variables
@@ -116,21 +119,37 @@ function check_for_updates(){
 	fi
 }
 
-# If $1 exists, then cat $1 | wc -l
-# Else, then cat ls (recursively if asked by the user) | wc -l
-# This will give us the number of files which will have to be converted.
+# If not any argument, converts all the available CR2 files of the current folder
+# If arguments : converts the arguments or the listed files in the file in arguement
 # If number_of_files_to_convert > 50, then pop-up a message to prevent the user it's gonna be long.
 # And in all cases, this function calls the main converter function
 function convert_CR2_to_JPG(){
 
-	if [ $# -eq 1 ]
+	if [ $# -eq 0 ]
 	then
-		files=`cat $1`
-		number_of_files_to_convert=`cat $1 |wc -l`
-	else
+		# Not any argument : convert all the CR2 pictures present inside the current folder
 		#files=`$find . -name "*.CR2"`
 		files=`ls -1R *.CR2`
-		number_of_files_to_convert=`ls -1R *.CR2 |wc -l`
+		number_of_files_to_convert=`ls -1R *.CR2 |wc -l`	
+	elif [ $# -eq 1 ]
+	then
+		if [[ $1 == *.CR2 ]]
+		then
+			# The parameter is a CR2
+			files=$1
+			number_of_files_to_convert=1
+		else
+			# The parameter is the file containing all the files to be converted
+			files=`cat $1`
+			number_of_files_to_convert=`cat $1 |wc -l`
+		fi
+	else
+		# More than 1 argument : these are the files which have to be converted
+		for i in $@
+			do 
+			files="$files $i"
+			let number_of_files_to_convert=number_of_files_to_convert+1
+		done;	
 	fi
 
 	echo "The number of files to convert is : "$number_of_files_to_convert
@@ -242,16 +261,5 @@ then
 fi
 
 # And finally call the CR2 to JPG converter script
-if [ $# -eq 1 ]
-then
-	convert_CR2_to_JPG $1
-else
-	convert_CR2_to_JPG
-fi
-
-
-
-
-
-
+convert_CR2_to_JPG $@
 
