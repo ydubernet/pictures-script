@@ -11,13 +11,23 @@
 # 11/03/2016 # Adding possibility to rename      #
 #            # regarding the creation date       #
 # 13/03/2016 # Remove the rename functionality   #
+# 14/03/2016 # Possible to remove all metadata   #
+#            # if no picture in parameter        #
 # ############################################## #
 
 
 # TODO Zone :
-# TODO : Same way of running than rename_tools
 
 # Global variables :
+
+# A POSIX variable
+OPTIND=1               # Reset in case getopts has been used previously in the shell.
+
+# A boolean to know if the script has to rename on subdirectories or not
+recursive=0
+
+# Extension of the files which will be renamed
+extension=""
 
 # -------------------------------------------------------------------------------------------------------------------------
 # Functions :
@@ -28,11 +38,14 @@
 function help_script(){
 	echo -e "This script is a little tool to do manage your pictures metadata"
 	echo -e "Usage : "
+	echo -e "Not any argument : metadata of all the current folder will be removed"
 	echo -e "With one argument, removes metadata from the filename passed as an argument"
 	echo -e "With two arguments, will take this input to get CR2 files it will convert"
 	echo -e "If you launch this script with root rights, it will check for third parties software updates including exiftool"
 	echo -e "Options :"
 	echo -e "-h : shows you this help"
+	echo -e "-r : Remove metadata on the current directory and all its subdirectories (ignored if you give an argument)"
+	echo -e "-e : extension : Usefull in order to set the extension of files you want to remove metadata, if many extensions are in the directory or its subdirectories"
 }
 
 
@@ -74,33 +87,51 @@ function check_for_updates(){
 # script
 
 #extracts option values
-while getopts "h?" opt; do
+while getopts "h?re:" opt; do
     case "$opt" in
     h|\?)
         help_script
         exit 0
         ;;
+    r)
+		recursive=1
+		;;
+	e)
+		extension=$OPTARG
+		;;
     esac
 done
 
-#shift $((OPTIND-1))
+shift $((OPTIND-1))
 
+options=""
+
+if [ "$extension" != "" ]; then
+	options="$options -ext $extension "
+fi
+if [ $recursive -eq 1 ] && [ $# -eq 0 ]; then
+	# Not recursive option if the script is runned for only one picture
+	options="$options -r "
+fi
 
 # Call the exiftool library
+# !!!!!!! NEVER overwrite the original picture when trying to remove metadata !!!!!!!
+if [ $# -eq 0 ]; then
+	# Remove metadata from all the current folder
+	echo "Are you sure you want to delete metadata of all files ? [y/n]"
+	read answ;
 
-# First of all, copy or remove metadata
-if [ $# -eq 1 ]; then
+	if [ $answ = "y" -o $answ = "Y" ]; then
+		exiftool $options -all= .
+	fi
+elif [ $# -eq 1 ]; then
 	# Remove metadata from the considered file
 	echo "Removing metadata of $1"
-	exiftool -overwrite_original -all= $1
+	exiftool -all= $1
 elif [ $# -eq 2 ]; then
 	# Copy all metadata from the first parameter to the second parameter
 	echo "Copying metadata from $1 to $2"
 	exiftool -overwrite_original -tagsFromFile $1 $2
 fi
 
-
-
-
 #exiftool -b -PreviewImage -w _preview.jpg -ext cr2 -r . # To extract the JPG preview image of a raw
-
