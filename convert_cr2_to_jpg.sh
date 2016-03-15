@@ -35,6 +35,8 @@
 #            #                                   #
 # 15/03/2016 # Possible to take into parameter   #
 #            # names of CR2 files to be converted#
+#            # Ignore in the main converter if   #
+#            # the input is not a raw file       #
 # ############################################## #
 
 
@@ -44,7 +46,6 @@
 # TODO : Solve the issue when the script says it needs an external library but continues to run.
 # TODO : Add an option to set the Author name with exiftool
 # TODO : A chown to be sure root does not own output files if runned in root mode ? Or quit the program once installed
-# TODO : Add an ignore in the main converter function if the file is not a CR2
 
 
 # Global variables
@@ -176,42 +177,47 @@ function convert_CR2_to_JPG_core(){
 	
 	for i in $@
 		do echo "Processing file $i";
-		filename=`basename $i .CR2`;
-		
-		# Version 1
-		# dcraw -T -w -c $filename.CR2 > $filename.tiff;
-		# convert $filename.tiff $filename.JPG;
-		
-		# Version 2
-		# dcraw -T $filename.CR2 > $filename.tiff;
-		# convert $filename.tiff $filename.JPG;
-		
-		# Version 3 : the better one when pictures are taken in an outside context
-		dcraw -c -q 3 -a -w -H 5 -b 5 $filename.CR2 > $filename.tiff
-		cjpeg -quality 95 -optimize -progressive $filename.tiff > $filename.JPG;
-		rm $filename.tiff
-		
-		# Version 4
-		# dcraw -t 0 -c -w -o 1 -v -h $filename.CR2 > $filename.tiff
-		# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG
-		
-		# Version 5
-		# dcraw -c -q 0 -w -H 5 -b 8 $filename.CR2 > $filename.tiff
-		# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG
+
+		if [[ $i != *.CR2 ]]; then
+			echo "The file $i is not a RAW file. Ignoring it...";
+		else
+			filename=`basename $i .CR2`;
+			
+			# Version 1
+			# dcraw -T -w -c $filename.CR2 > $filename.tiff;
+			# convert $filename.tiff $filename.JPG;
+			
+			# Version 2
+			# dcraw -T $filename.CR2 > $filename.tiff;
+			# convert $filename.tiff $filename.JPG;
+			
+			# Version 3 : the better one when pictures are taken in an outside context
+			dcraw -c -q 3 -a -w -H 5 -b 5 $filename.CR2 > $filename.tiff
+			cjpeg -quality 95 -optimize -progressive $filename.tiff > $filename.JPG;
+			rm $filename.tiff
+			
+			# Version 4
+			# dcraw -t 0 -c -w -o 1 -v -h $filename.CR2 > $filename.tiff
+			# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG
+			
+			# Version 5
+			# dcraw -c -q 0 -w -H 5 -b 8 $filename.CR2 > $filename.tiff
+			# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG
 
 
-		# And we add metadata management
-		if [ "$metadata" == "copy" ] || [ "$metadata" == "c" ] || [ "$metadata" == "" ]
-		then
-			bash metadata_tools.sh $filename.CR2 $filename.JPG
+			# And we add metadata management
+			if [ "$metadata" == "copy" ] || [ "$metadata" == "c" ] || [ "$metadata" == "" ]
+			then
+				bash metadata_tools.sh $filename.CR2 $filename.JPG
+			fi
+
+			if [ "$metadata" == "delete" ] || [ "$metadata" == "d" ]
+			then
+				bash metadata_tools.sh $filename.JPG
+			fi
+			
+			echo "Conversion done.";
 		fi
-
-		if [ "$metadata" == "delete" ] || [ "$metadata" == "d" ]
-		then
-			bash metadata_tools.sh $filename.JPG
-		fi
-		
-		echo "Conversion done.";
 
 		let evol=$evol+1
 		let progress=(100 * $evol)/number_of_files_to_convert;
