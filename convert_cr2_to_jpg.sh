@@ -37,15 +37,17 @@
 #            # names of CR2 files to be converted#
 #            # Ignore in the main converter if   #
 #            # the input is not a raw file       #
+#            #                                   #
+# 16/03/2016 # Implement a recursively converter #
 # ############################################## #
 
 
 # TODO Zone :
-# TODO : Implement a recursively converter
 # TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
 # TODO : Solve the issue when the script says it needs an external library but continues to run.
 # TODO : Add an option to set the Author name with exiftool
 # TODO : A chown to be sure root does not own output files if runned in root mode ? Or quit the program once installed
+# TODO : Edit more easily the number of files before we do not put a warning messqge to the user
 
 
 # Global variables
@@ -125,13 +127,22 @@ function check_for_updates(){
 # If number_of_files_to_convert > 50, then pop-up a message to prevent the user it's gonna be long.
 # And in all cases, this function calls the main converter function
 function convert_CR2_to_JPG(){
+	# In order to be able to run on directories which may have spaces, 
+	# we save the IFS value and replace it by the "new line" caracter
+	SAVEIFS=$IFS
+	IFS=$(echo -en "\n\b")
 
 	if [ $# -eq 0 ]
 	then
 		# Not any argument : convert all the CR2 pictures present inside the current folder
-		#files=`$find . -name "*.CR2"`
-		files=`ls -1R *.CR2`
-		number_of_files_to_convert=`ls -1R *.CR2 |wc -l`	
+		if [ $recursive -eq 1 ]; then
+			files=`find . -name "*.CR2"`
+			number_of_files_to_convert=`find . -name "*.CR2" |wc -l`
+		else
+			files=`ls -1R *.CR2`
+			number_of_files_to_convert=`ls -1R *.CR2 |wc -l`
+		fi
+		
 	elif [ $# -eq 1 ]
 	then
 		if [[ $1 == *.CR2 ]]
@@ -170,6 +181,9 @@ function convert_CR2_to_JPG(){
 	else
 		convert_CR2_to_JPG_core $files
 	fi
+
+	# Put the IFS value back to its normal value
+	IFS=$SAVEIFS
 }
 
 # This function is the main function of this script. Is manages the batch CR2 to JPG conversion
