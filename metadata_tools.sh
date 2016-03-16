@@ -127,11 +127,11 @@ if [ $# -eq 0 ]; then
 elif [ $# -eq 1 ]; then
 	# Remove metadata from the considered file
 	echo "Removing metadata of $1"
-	exiftool -all= $1
+	exiftool -all= "$1"
 elif [ $# -eq 2 ]; then
 	# Copy all metadata from the first parameter to the second parameter
 	echo "Copying metadata from $1 to $2"
-	exiftool -overwrite_original -tagsFromFile $1 $2
+	exiftool -overwrite_original -tagsFromFile "$1" "$2"
 fi
 
 #exiftool -b -PreviewImage -w _preview.jpg -ext cr2 -r . # To extract the JPG preview image of a raw

@@ -33,21 +33,21 @@
 #            # convert                           #
 # 13/03/2016 # Remove any call to a rename script#
 #            #                                   #
-# 15/03/2016 # Possible to take into parameter   #
+# 14/03/2016 # Possible to take into parameter   #
 #            # names of CR2 files to be converted#
 #            # Ignore in the main converter if   #
 #            # the input is not a raw file       #
 #            #                                   #
-# 16/03/2016 # Implement a recursively converter #
+# 15/03/2016 # Implement a recursively converter #
 # ############################################## #
 
 
 # TODO Zone :
-# TODO : Define commands at the begining of the file so that they could be modified easily (cf. when we'll include reverse option)
 # TODO : Solve the issue when the script says it needs an external library but continues to run.
 # TODO : Add an option to set the Author name with exiftool
 # TODO : A chown to be sure root does not own output files if runned in root mode ? Or quit the program once installed
-# TODO : Edit more easily the number of files before we do not put a warning messqge to the user
+# TODO : Edit more easily the number of files before we do not put a warning message to the user
+# TODO : Make this script work if we take into parameter a file located in a folder which has a space in its name
 
 
 # Global variables
@@ -173,7 +173,6 @@ function convert_CR2_to_JPG(){
 		read answ;
 
 		if [ $answ = "y" -o $answ = "Y" ]; then
-			echo $files
 			convert_CR2_to_JPG_core $files
 		else
 			echo "Conversion process cancelled."
@@ -188,15 +187,16 @@ function convert_CR2_to_JPG(){
 
 # This function is the main function of this script. Is manages the batch CR2 to JPG conversion
 function convert_CR2_to_JPG_core(){
-	
+
 	for i in $@
 		do echo "Processing file $i";
 
 		if [[ $i != *.CR2 ]]; then
 			echo "The file $i is not a RAW file. Ignoring it...";
 		else
+			directory=`dirname $i`
 			filename=`basename $i .CR2`;
-			
+
 			# Version 1
 			# dcraw -T -w -c $filename.CR2 > $filename.tiff;
 			# convert $filename.tiff $filename.JPG;
@@ -206,7 +206,7 @@ function convert_CR2_to_JPG_core(){
 			# convert $filename.tiff $filename.JPG;
 			
 			# Version 3 : the better one when pictures are taken in an outside context
-			dcraw -c -q 3 -a -w -H 5 -b 5 $filename.CR2 > $filename.tiff
+			dcraw -c -q 3 -a -w -H 5 -b 5 "$directory/$filename.CR2" > $filename.tiff
 			cjpeg -quality 95 -optimize -progressive $filename.tiff > $filename.JPG;
 			rm $filename.tiff
 			
@@ -222,12 +222,17 @@ function convert_CR2_to_JPG_core(){
 			# And we add metadata management
 			if [ "$metadata" == "copy" ] || [ "$metadata" == "c" ] || [ "$metadata" == "" ]
 			then
-				bash metadata_tools.sh $filename.CR2 $filename.JPG
+				bash metadata_tools.sh "$directory/$filename.CR2" $filename.JPG
 			fi
 
 			if [ "$metadata" == "delete" ] || [ "$metadata" == "d" ]
 			then
 				bash metadata_tools.sh $filename.JPG
+			fi
+
+			# At the end, move the output file to the same directory than the input file if it was not in the current directory
+			if [ "$directory" != "." ]; then
+				mv $filename.JPG $directory
 			fi
 			
 			echo "Conversion done.";
