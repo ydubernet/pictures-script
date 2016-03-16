@@ -241,6 +241,19 @@ fi
 
 if [ $convert -eq 1 ]
 then
+
+	# Deal with converter bash options
+	options=""
+
+	if [ $metadata -eq 1 ]
+	then 
+		# Default : we copy metadata to the generated JPG files
+		options="$options -m copy "
+	else
+		# We remove metadata from the generated JPG files
+		options="$options -m remove "
+	fi
+
 	if [ -f $output_file ]
 	then
 		cr2output_file="CR2$output_file" # To avoid overriding previous output file
@@ -248,14 +261,7 @@ then
 	# To make sure the input file contains only CR2 files, we first call extract_files function on CR2 format
 	extract_files $filtered_file $cr2output_file "CR2"
 
-	if [ $metadata -eq 1 ]
-	then 
-		# Default : we copy metadata to the generated JPG files
-		bash convert_cr2_to_jpg.sh -m "copy" $cr2output_file
-	else
-		# We remove metadata from the generated JPG files
-		bash convert_cr2_to_jpg.sh -m "remove" $cr2output_file
-	fi
+	bash convert_cr2_to_jpg.sh $options $cr2output_file
 fi
 
 if [ $delete -eq 1 ]
