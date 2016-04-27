@@ -111,11 +111,11 @@ function check_for_needed_softwares(){
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
 		command -v convert >/dev/null 2>&1 || echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights."
-		command -v cjpeg >/dev/null 2>&1 || echo >&2 "I require libjpeg-progs library but it is not installed. Please restart this script with root rights."
+		#command -v cjpeg >/dev/null 2>&1 || echo >&2 "I require libjpeg-progs library but it is not installed. Please restart this script with root rights."
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
 		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick
-		command -v cjpeg >/dev/null 2>&1 || echo >&2 "Installing libjpeg-progs..."; apt-get install libjpeg-progs
+		#command -v cjpeg >/dev/null 2>&1 || echo >&2 "Installing libjpeg-progs..."; apt-get install libjpeg-progs
 	fi
 }
 
@@ -126,7 +126,7 @@ function check_for_updates(){
 	then
 		# Root rights. Let's check if we have some updates on third parties softwares.
 		apt-get upgrade imagemagick
-		apt-get upgrade libjpeg-progs
+		#apt-get upgrade libjpeg-progs
 	fi
 }
 
@@ -174,9 +174,9 @@ function convert_CR2_to_JPG(){
 
 	echo "The number of files to convert is : "$number_of_files_to_convert
 
-	if [ $number_of_files_to_convert -ge 50 ]
+	if [ $number_of_files_to_convert -ge 200 ]
 	then	
-		echo "Please consider it takes nearly one minute per file."
+		echo "Please consider it takes nearly about 3 seconds per file."
 		echo "Are you sure to start conversion ? [y/n] "
 		read answ;
 
@@ -228,8 +228,8 @@ function convert_CR2_to_JPG_core(){
 			
 			# Version which just extracts the thumbnail image
 			dcraw -e $filename.CR2
-			mv $filename$dcraw_thumbnail_suffix.jpg $filename.jpg # 3'50
-			#exiftool -b -PreviewImage $filename.CR2 > $filename.jpg # 4'40
+			mv $filename$dcraw_thumbnail_suffix.jpg $filename.jpg # For 72 files, 3'50
+			#exiftool -b -PreviewImage $filename.CR2 > $filename.jpg # For 72 files, 4'40
 
 			# And we add metadata management
 			if [ "$metadata" == "copy" ] || [ "$metadata" == "c" ] || [ "$metadata" == "" ]
