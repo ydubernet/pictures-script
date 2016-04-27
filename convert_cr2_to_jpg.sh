@@ -39,6 +39,11 @@
 #            # the input is not a raw file       #
 #            #                                   #
 # 15/03/2016 # Implement a recursively converter #
+#            #                                   #
+# 26/04/2016 # No more conversion, just extract  #
+#            # the preview image which stays the #
+#            # best rendering output             #
+#            # Change JPG to jpg                 #
 # ############################################## #
 
 
@@ -66,6 +71,9 @@ recursive=0
 
 # An option to launch the metadata script in copy or delete mode
 metadata=""
+
+# This value represents the suffix output name of dcraw extract thumbnail image of RAW format
+dcraw_thumbnail_suffix=".thumb"
 
 # -------------------------------------------------------------------------------------------------------------------------
 # Functions :
@@ -199,40 +207,44 @@ function convert_CR2_to_JPG_core(){
 
 			# Version 1
 			# dcraw -T -w -c $filename.CR2 > $filename.tiff;
-			# convert $filename.tiff $filename.JPG;
+			# convert $filename.tiff $filename.jpg;
 			
 			# Version 2
 			# dcraw -T $filename.CR2 > $filename.tiff;
-			# convert $filename.tiff $filename.JPG;
+			# convert $filename.tiff $filename.jpg;
 			
 			# Version 3 : the better one when pictures are taken in an outside context
-			dcraw -c -q 3 -a -w -H 5 -b 5 "$directory/$filename.CR2" > $filename.tiff
-			cjpeg -quality 95 -optimize -progressive $filename.tiff > $filename.JPG;
-			rm $filename.tiff
+			# dcraw -c -q 3 -a -w -H 5 -b 5 "$directory/$filename.CR2" > $filename.tiff
+			# cjpeg -quality 95 -optimize -progressive $filename.tiff > $filename.jpg;
+			# rm $filename.tiff
 			
 			# Version 4
 			# dcraw -t 0 -c -w -o 1 -v -h $filename.CR2 > $filename.tiff
-			# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG
+			# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.jpg
 			
 			# Version 5
 			# dcraw -c -q 0 -w -H 5 -b 8 $filename.CR2 > $filename.tiff
-			# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.JPG
-
+			# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.jpg
+			
+			# Version which just extracts the thumbnail image
+			dcraw -e $filename.CR2
+			mv $filename$dcraw_thumbnail_suffix.jpg $filename.jpg # 3'50
+			#exiftool -b -PreviewImage $filename.CR2 > $filename.jpg # 4'40
 
 			# And we add metadata management
 			if [ "$metadata" == "copy" ] || [ "$metadata" == "c" ] || [ "$metadata" == "" ]
 			then
-				bash metadata_tools.sh "$directory/$filename.CR2" $filename.JPG
+				bash metadata_tools.sh "$directory/$filename.CR2" $filename.jpg
 			fi
 
 			if [ "$metadata" == "delete" ] || [ "$metadata" == "d" ]
 			then
-				bash metadata_tools.sh $filename.JPG
+				bash metadata_tools.sh $filename.jpg
 			fi
 
 			# At the end, move the output file to the same directory than the input file if it was not in the current directory
 			if [ "$directory" != "." ]; then
-				mv $filename.JPG $directory
+				mv $filename.jpg $directory
 			fi
 			
 			echo "Conversion done.";
