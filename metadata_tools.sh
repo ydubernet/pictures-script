@@ -17,6 +17,7 @@
 
 
 # TODO Zone :
+# Solve the bug when trying to remove metadata from a jpg file : also removes them in the _original file
 
 # Global variables :
 
