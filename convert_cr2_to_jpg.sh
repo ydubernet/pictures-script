@@ -44,6 +44,9 @@
 #            # the preview image which stays the #
 #            # best rendering output             #
 #            # Change JPG to jpg                 #
+#            # Edit more easily the max number of#
+#            # files before displaying the       #
+#            # user warning message              #
 # ############################################## #
 
 
@@ -51,7 +54,6 @@
 # TODO : Solve the issue when the script says it needs an external library but continues to run.
 # TODO : Add an option to set the Author name with exiftool
 # TODO : A chown to be sure root does not own output files if runned in root mode ? Or quit the program once installed
-# TODO : Edit more easily the number of files before we do not put a warning message to the user
 # TODO : Make this script work if we take into parameter a file located in a folder which has a space in its name
 
 
@@ -74,6 +76,9 @@ metadata=""
 
 # This value represents the suffix output name of dcraw extract thumbnail image of RAW format
 dcraw_thumbnail_suffix=".thumb"
+
+# This value represents the max number of files before we display a warning message to the user regarding the running time it will take
+warning_message_number_of_pictures=200
 
 # -------------------------------------------------------------------------------------------------------------------------
 # Functions :
@@ -174,7 +179,7 @@ function convert_CR2_to_JPG(){
 
 	echo "The number of files to convert is : "$number_of_files_to_convert
 
-	if [ $number_of_files_to_convert -ge 200 ]
+	if [ $number_of_files_to_convert -ge $warning_message_number_of_pictures ]
 	then	
 		echo "Please consider it takes nearly about 3 seconds per file."
 		echo "Are you sure to start conversion ? [y/n] "
