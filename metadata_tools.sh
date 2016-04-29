@@ -66,7 +66,7 @@ function check_for_needed_softwares(){
 	if [ $? -eq 1 ];
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
-		command -v exiftool >/dev/null 2>&1 || echo >&2 "I require exiftool library but is is not installed. Please restart this script with root rights."
+		command -v exiftool >/dev/null 2>&1 || echo >&2 "I require exiftool library but is is not installed. Please restart this script with root rights." && exit 0;
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
 		command -v exiftool >/dev/null 2>&1 || echo >&2 "Installing exiftool..."; apt-get install libimage-exiftool-perl
@@ -134,5 +134,3 @@ elif [ $# -eq 2 ]; then
 	echo "Copying metadata from $1 to $2"
 	exiftool -overwrite_original -tagsFromFile "$1" "$2"
 fi
-
-#exiftool -b -PreviewImage -w _preview.jpg -ext cr2 -r . # To extract the JPG preview image of a raw

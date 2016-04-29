@@ -115,8 +115,8 @@ function check_for_needed_softwares(){
 	if [ $? -eq 1 ];
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
-		command -v convert >/dev/null 2>&1 || echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights."
-		#command -v cjpeg >/dev/null 2>&1 || echo >&2 "I require libjpeg-progs library but it is not installed. Please restart this script with root rights."
+		command -v convert >/dev/null 2>&1 || echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights." && exit 0;
+		#command -v cjpeg >/dev/null 2>&1 || echo >&2 "I require libjpeg-progs library but it is not installed. Please restart this script with root rights." && exit 0;
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
 		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick
