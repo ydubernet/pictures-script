@@ -47,11 +47,14 @@
 #            # Edit more easily the max number of#
 #            # files before displaying the       #
 #            # user warning message              #
+#            #                                   #
+# 28/04/2016 # Solved the issue when a library is#
+#            # needed but the script continues to#
+#            # run                               #
 # ############################################## #
 
 
 # TODO Zone :
-# TODO : Solve the issue when the script says it needs an external library but continues to run.
 # TODO : Add an option to set the Author name with exiftool
 # TODO : A chown to be sure root does not own output files if runned in root mode ? Or quit the program once installed
 # TODO : Make this script work if we take into parameter a file located in a folder which has a space in its name
@@ -115,8 +118,8 @@ function check_for_needed_softwares(){
 	if [ $? -eq 1 ];
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
-		command -v convert >/dev/null 2>&1 || echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights." && exit 0;
-		#command -v cjpeg >/dev/null 2>&1 || echo >&2 "I require libjpeg-progs library but it is not installed. Please restart this script with root rights." && exit 0;
+		command -v convert >/dev/null 2>&1 || (echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights." && exit 1;)
+		#command -v cjpeg >/dev/null 2>&1 || echo >&2 "I require libjpeg-progs library but it is not installed. Please restart this script with root rights." && exit 1;
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
 		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick

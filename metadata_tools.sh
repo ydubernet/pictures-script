@@ -66,7 +66,7 @@ function check_for_needed_softwares(){
 	if [ $? -eq 1 ];
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
-		command -v exiftool >/dev/null 2>&1 || echo >&2 "I require exiftool library but is is not installed. Please restart this script with root rights." && exit 0;
+		command -v exiftool >/dev/null 2>&1 || (echo >&2 "I require exiftool library but is is not installed. Please restart this script with root rights." && exit 1;)
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
 		command -v exiftool >/dev/null 2>&1 || echo >&2 "Installing exiftool..."; apt-get install libimage-exiftool-perl
@@ -109,13 +109,34 @@ options=""
 
 if [ "$extension" != "" ]; then
 	options="$options -ext $extension "
+
+
 fi
 if [ $recursive -eq 1 ] && [ $# -eq 0 ]; then
 	# Not recursive option if the script is runned for only one picture
 	options="$options -r "
 fi
 
-# Call the exiftool library
+# First of all, check needed softwares are installed
+# If not, return and ask admin rights to then install those softwares.
+check_for_needed_softwares
+if [ ${PIPESTATUS[0]} -eq 1 ];
+then
+	exit 1;
+fi
+
+# Then, check if it exists some upgrades
+check_for_updates
+
+# Then, come back to normal. :)
+check_root
+if [ $? -eq 0 ];
+then
+	sudo -k # To lose root rights. Otherwise, root will own our files and that might be a mess...
+fi
+
+
+# And finally call the exiftool library
 # !!!!!!! NEVER overwrite the original picture when trying to remove metadata !!!!!!!
 if [ $# -eq 0 ]; then
 	# Remove metadata from all the current folder

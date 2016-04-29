@@ -68,7 +68,7 @@ function check_for_needed_softwares(){
 	if [ $? -eq 1 ];
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
-		command -v exiftool >/dev/null 2>&1 || echo >&2 "I require exiftool library but is is not installed. Please restart this script with root rights." && exit 0;
+		command -v exiftool >/dev/null 2>&1 || (echo >&2 "I require exiftool library but is is not installed. Please restart this script with root rights." && exit 1;)
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
 		command -v exiftool >/dev/null 2>&1 || echo >&2 "Installing exiftool..."; apt-get install libimage-exiftool-perl
@@ -121,6 +121,26 @@ if [ $recursive -eq 1 ] && [ $# -eq 0 ]; then
 	options="$options -r "
 fi
 
+
+# First of all, check needed softwares are installed
+# If not, return and ask admin rights to then install those softwares.
+check_for_needed_softwares
+if [ ${PIPESTATUS[0]} -eq 1 ];
+then
+	exit 1;
+fi
+
+# Then, check if it exists some upgrades
+check_for_updates
+
+# Then, come back to normal. :)
+check_root
+if [ $? -eq 0 ];
+then
+	sudo -k # To lose root rights. Otherwise, root will own our files and that might be a mess...
+fi
+
+# Finally call the exiftool to rename files
 if [ $# -eq 1 ]; then
 	#echo "Renaming the file $1 regarding its creation date"
 	exiftool '-filename<CreateDate' $options -d $rename_format $1
