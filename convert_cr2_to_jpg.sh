@@ -51,6 +51,9 @@
 # 28/04/2016 # Solved the issue when a library is#
 #            # needed but the script continues to#
 #            # run                               #
+# 30/04/2016 # Remove the error which happens    #
+#            # when launching the script if not  #
+#            # any CR2 exist                     #
 # ############################################## #
 
 
@@ -155,8 +158,9 @@ function convert_CR2_to_JPG(){
 			files=`find . -name "*.CR2"`
 			number_of_files_to_convert=`find . -name "*.CR2" |wc -l`
 		else
-			files=`ls -1R *.CR2`
-			number_of_files_to_convert=`ls -1R *.CR2 |wc -l`
+			
+			files=`ls -1R *.CR2 2> /dev/null`
+			number_of_files_to_convert=`ls -1R *.CR2 2> /dev/null|wc -l`
 		fi
 		
 	elif [ $# -eq 1 ]
