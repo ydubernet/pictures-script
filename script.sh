@@ -36,6 +36,8 @@
 #            # algorithm                         #
 # 07/03/2016 # Adding metadata option to call    #
 #            # the metadata script               #
+# 30/04/2016 # Add the look_for_missing_files    #
+#            # method                            #
 # ############################################## #
 
 
@@ -68,6 +70,9 @@ ignored_folder=""
 
 # The output file from a extract_format call
 output_file="out.txt"
+
+# The output file from a list_missing_files call
+missing_files="missing.txt"
 
 # A boolean which will generate a call to delete_files function if it is true
 delete=0
@@ -109,8 +114,12 @@ function delete_temporary_files() {
 	then
 		rm $output_file
 	fi
+	
+	if [ -f $missing_files ]
+	then
+		rm $missing_files
+	fi
 }
-
 
 # This function deletes all files writen in the temporary text file in param
 function delete_files() {
@@ -141,23 +150,18 @@ function counter_plus() {
   counter = $counter + 1;
 }
 
-
 # To extract all the JPG files from a file obtained by a ls -l or a dir on Windows.
 # Specific function for JPG format which can be both JPG and JPEG
 function extract_JPG_pictures() {
 	grep -E -x -i "^.*\.(JPE?G)$" $1 > $2
-
 	echo "`cat $2 | wc -l` JPG file(s) have been grepped in the $2 file.";
 }
-
 
 # To extract all the files with a specified $3 format from a file obtained by a ls -l or a dir on Windows.
 function extract_files() {
 	grep -E -x -i "^.*\.($3)$" $1 > $2
-
 	echo "`cat $2 | wc -l` $3 file(s) have been grepped in the $2 file.";
 }
-
 
 # We read the input file and look for files from the current folder
 # We can exclude a folder
@@ -176,9 +180,49 @@ function look_for_files() {
 	echo "`cat $2 |wc -l` file(s) grepped in the $1 have been found from the current folder.";
 }
 
+# With two arguments base_format and to_check_format,
+# Will give the list of files which are not in the base format
+# but in the to check format
+function list_missing_files()
+{
+	# In order to be able to run on directories which may have spaces, 
+	# we save the IFS value and replace it by the "new line" caracter
+	SAVEIFS=$IFS
+	IFS=$(echo -en "\n\b")
+	
+	base_format=$1
+	to_check_format=$2
+	
+	# TODO : add recursive option
+	recursive=0
+	
+	if [ $recursive -eq 1 ]; then
+		base_files=`find . -iname "*.$1"`
+		to_check_files=`find . -iname "*.$2"`
+	else
+		base_files=`ls -1R *.$1`
+		to_check_files=`ls -1R *.$2`
+	fi
+	
+	found_files=""
+	
+	for file in $to_check_files
+	do
+		filename=`basename $file .$2` 
+		if [[ $base_files !=  *$filename* ]] # And if we want the ones which exist, we replace != by ==.
+                                             # an option could be a nice idea for that
+		then
+			found_files="$found_files $file"
+		fi
+	done
+
+	echo "$found_files" >> $missing_files	
+	
+	# Put the IFS value back to its normal value
+	IFS=$SAVEIFS
+}
 
 # ------------------------------------------------------------------------------------
-
 # script
 
 #first, we delete temporary files
@@ -266,5 +310,5 @@ fi
 
 if [ $delete -eq 1 ]
 then 
-	delete_files $output_file
+	list_missing_files "jpg" "CR2"
 fi
