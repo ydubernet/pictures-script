@@ -74,6 +74,9 @@ output_file="out.txt"
 # The output file from a list_missing_files call
 missing_files="missing.txt"
 
+# The input file of a list of files to be deleted
+to_delete_file=$missing_files
+
 # A boolean which will generate a call to delete_files function if it is true
 delete=0
 
@@ -100,7 +103,7 @@ function help_script() {
     echo -e "-o output_file : to set another output file name than the default out.txt one"
     echo -e "-c : Will call a script which converts CR2 to JPG files"
     echo -e "-m : Used with -c, will remove metadata from the list of output files"
-    echo -e "-d : Will delete the output file listed content (after asking confirmation, of course). So BE CAREFULL using it."
+	echo -e "-d : Will delete the missing file listed content (after asking confirmation, of course). So BE CAREFULL using it."
 }
 
 # This function deletes all the temporary files before starting the important job.
@@ -126,6 +129,9 @@ function delete_files() {
 	echo "Are you sure you want to delete those files ? [y/n] " ;
 	read answ;
 
+	SAVEIFS=$IFS
+	IFS=$'\r\n'
+	
 	if [ $answ = "y" -o $answ = "Y" ]; then
 		while read line;
 		do
@@ -143,11 +149,13 @@ function delete_files() {
 	else
 		echo -e "Deleting process canceled.";
 	fi
+	
+	IFS=$SAVEIFS
 }
 
 # This function increments a global counter which counts the number of actions done.
 function counter_plus() {
-  counter = $counter + 1;
+  let counter=$counter+1;
 }
 
 # To extract all the JPG files from a file obtained by a ls -l or a dir on Windows.
@@ -212,11 +220,14 @@ function list_missing_files()
 		if [[ $base_files !=  *$filename* ]] # And if we want the ones which exist, we replace != by ==.
                                              # an option could be a nice idea for that
 		then
-			found_files="$found_files $file"
+			found_files="$found_files"$'\r\n'"$file"
 		fi
 	done
 
-	echo "$found_files" >> $missing_files	
+	echo "$found_files" >> $3
+	number_of_missing_files=`cat $3 | wc -l`
+	let number_of_missing_files=$number_of_missing_files-1
+	echo "$number_of_missing_files $2 missing file(s) have been grepped in the $3 file.";
 	
 	# Put the IFS value back to its normal value
 	IFS=$SAVEIFS
@@ -229,7 +240,7 @@ function list_missing_files()
 delete_temporary_files
 
 #extracts option values
-while getopts "h?e:i:f:o:dcm" opt; do
+while getopts "h?i:f:o:dcm" opt; do
     case "$opt" in
     h|\?)
         help_script
@@ -310,5 +321,6 @@ fi
 
 if [ $delete -eq 1 ]
 then 
-	list_missing_files "jpg" "CR2"
+	list_missing_files "jpg" "CR2" $missing_files
+	delete_files $to_delete_file
 fi
