@@ -38,14 +38,16 @@
 #            # the metadata script               #
 # 30/04/2016 # Add the look_for_missing_files    #
 #            # method                            #
+# 09/05/2016 # Remove the delete option idea     #
+# 10/05/2016 # Copy all log files to a log       #
+#            # directory                         #
 # ############################################## #
 
 
 # TODO Zone :
 
 # TODO : Permit the user to look for files non recursively
-# TODO : Think about deleting input_file as an option to get it as an input of the script
-# TODO : At the end, move all txt files into a log directory and name them by date
+# TODO : Solve the issue cp : missing destination file operand
 # TODO : Solve the issue with the -i option
 
 
@@ -86,6 +88,9 @@ convert=0
 # An option to launch the metadata script in copy or delete mode
 metadata=1
 
+# An option which tells if the scripts saves log files or not
+save=1
+
 # -------------------------------------------------------------------------------------------------------------------------
 # Functions :
 
@@ -104,6 +109,7 @@ function help_script() {
     echo -e "-c : Will call a script which converts CR2 to JPG files"
     echo -e "-m : Used with -c, will remove metadata from the list of output files"
 	echo -e "-d : Will delete the missing file listed content (after asking confirmation, of course). So BE CAREFULL using it."
+	echo -e "-s : enable/disable saving log files. You can set the default value by editing this script."
 }
 
 # This function deletes all the temporary files before starting the important job.
@@ -118,6 +124,11 @@ function delete_temporary_files() {
 		rm $output_file
 	fi
 	
+	if [ -f "CR2$output_file" ]
+	then
+		rm "CR2$output_file"
+	fi
+
 	if [ -f $missing_files ]
 	then
 		rm $missing_files
@@ -240,7 +251,7 @@ function list_missing_files()
 delete_temporary_files
 
 #extracts option values
-while getopts "h?i:f:o:dcm" opt; do
+while getopts "h?i:f:o:dcms" opt; do
     case "$opt" in
     h|\?)
         help_script
@@ -267,6 +278,14 @@ while getopts "h?i:f:o:dcm" opt; do
 	m)  
         metadata=0
 		;;
+	s)
+		if [ $save -eq 1 ]
+		then
+			save=0
+		elif [ $save -eq 0 ]
+		then
+			save=1
+		fi
     esac
 done
 
@@ -323,4 +342,28 @@ if [ $delete -eq 1 ]
 then 
 	list_missing_files "jpg" "CR2" $missing_files
 	delete_files $to_delete_file
+fi
+
+# At the end, save logs files to an appropriated log directory
+if [ $save -eq 1 ]
+then
+	log_directory="log/`date +%Y%m%d_%H%M%S`/"
+	mkdir -p $log_directory
+
+	if [ -f $filtered_file ]
+	then
+		cp $filtered_file $log_directory
+	fi
+	if [ -f $missing_file ]
+	then
+		cp $missing_file $log_directory
+	fi
+	if [ -f $output_file ]
+	then
+		cp $output_file $log_directory
+	fi
+	if [ -f "CR2$output_file" ]
+	then
+		cp "CR2$output_file" $log_directory
+	fi
 fi
