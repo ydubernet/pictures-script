@@ -41,14 +41,13 @@
 # 09/05/2016 # Remove the delete option idea     #
 # 10/05/2016 # Copy all log files to a log       #
 #            # directory                         #
-# 11/05/2016 # Redirect cp stupid error to       #
-#            # /dev/null                         #
 # ############################################## #
 
 
 # TODO Zone :
 
 # TODO : Permit the user to look for files non recursively
+# TODO : Solve the issue cp : missing destination file operand
 # TODO : Solve the issue with the -i option
 
 
@@ -346,7 +345,6 @@ then
 fi
 
 # At the end, save logs files to an appropriated log directory
-# 2016-05-11 : Redirect cp stupid error to /dev/null
 if [ $save -eq 1 ]
 then
 	log_directory="log/`date +%Y%m%d_%H%M%S`/"
@@ -354,18 +352,18 @@ then
 
 	if [ -f $filtered_file ]
 	then
-		cp $filtered_file $log_directory 2>/dev/null
+		cp $filtered_file $log_directory
 	fi
 	if [ -f $missing_file ]
 	then
-		cp $missing_file $log_directory 2>/dev/null
+		cp $missing_file $log_directory
 	fi
 	if [ -f $output_file ]
 	then
-		cp $output_file $log_directory 2>/dev/null
+		cp $output_file $log_directory
 	fi
 	if [ -f "CR2$output_file" ]
 	then
-		cp "CR2$output_file" $log_directory 2>/dev/null
+		cp "CR2$output_file" $log_directory
 	fi
 fi
