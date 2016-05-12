@@ -47,7 +47,6 @@
 # TODO Zone :
 
 # TODO : Permit the user to look for files non recursively
-# TODO : Solve the issue cp : missing destination file operand
 # TODO : Solve the issue with the -i option
 
 
@@ -354,9 +353,9 @@ then
 	then
 		cp $filtered_file $log_directory
 	fi
-	if [ -f $missing_file ]
+	if [ -f $missing_files ]
 	then
-		cp $missing_file $log_directory
+		cp $missing_files $log_directory
 	fi
 	if [ -f $output_file ]
 	then
