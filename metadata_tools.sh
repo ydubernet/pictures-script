@@ -108,8 +108,6 @@ options=""
 
 if [ "$extension" != "" ]; then
 	options="$options -ext $extension "
-
-
 fi
 if [ $recursive -eq 1 ] && [ $# -eq 0 ]; then
 	# Not recursive option if the script is runned for only one picture
@@ -143,7 +141,9 @@ if [ $# -eq 0 ]; then
 	read answ;
 
 	if [ $answ = "y" -o $answ = "Y" ]; then
+		echo "Deleting metadata from all files..."
 		exiftool $options -all= .
+		echo "All files metadata have been removed."
 	fi
 elif [ $# -eq 1 ]; then
 	# Remove metadata from the considered file
