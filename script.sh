@@ -44,6 +44,8 @@
 # 11/05/2016 # Better management of recursive run#
 #            # on subdirectories                 #
 # 14/05/2016 # Fixed the issue with the -i option#
+# 15/05/2016 # Change the way we list missing    #
+#            # files                             #
 # ############################################## #
 
 
@@ -172,15 +174,13 @@ function delete_files() {
 	if [ $answ = "y" -o $answ = "Y" ]; then
 		while read line;
 		do
-			if [ -f $line ]; then
-				echo -e "Trying to delete $line";
-				rm $line
-				if [ $? -eq 0 ]; then
-					counter_plus
-					echo "Success in deleting $line";
-				else
-					echo "Failure in deleting $line";
-				fi
+			echo -e "Trying to delete $line";
+			rm $line
+			if [ $? -eq 0 ]; then
+				counter_plus
+				echo "Success in deleting $line";
+			else
+				echo "Failure in deleting $line";
 			fi
 		done < $1
 		echo -e "Deleting process done.";
@@ -237,32 +237,39 @@ function look_for_files() {
 # but in the to check format
 function list_missing_files()
 {
-	base_files=`find . $find_options -iname "*.$base_format"`
-	to_check_files=`find . $find_options -iname "*.$to_check_format"`
+	base_files=`find . $find_options -iname "*.$1"`
+	to_check_files=`find . $find_options -iname "*.$2"`
 
 	# In order to be able to run on directories which may have spaces, 
 	# we save the IFS value and replace it by the "new line" caracter
 	SAVEIFS=$IFS
 	IFS=$(echo -en "\n\b")
 	
-	base_format=$1
-	to_check_format=$2
-
 	found_files=""
 	
 	for file in $to_check_files
 	do
-		filename=`basename $file .$to_check_format`
-		if [[ $base_files !=  *$filename* ]] # And if we want the ones which exist, we replace != by ==.
-                                             # an option could be a nice idea for that
+		filename=`basename $file`
+		base_filename="${filename%.*}"
+
+		dirname=`dirname $file`
+		if [ ! -f "$dirname/$base_filename.$1" ]
 		then
-			found_files="$found_files"$'\r\n'"$file"
+			if [ -z "$found_files" ]
+			then
+				found_files=$file
+			else
+				found_files="$found_files"$'\r\n'"$file"
+			fi
 		fi
 	done
 
-	echo "$found_files" >> $3
+	echo "$found_files" > $3
 	number_of_missing_files=`cat $3 | wc -l`
-	let number_of_missing_files=$number_of_missing_files-1
+	if [ -z $found_files ]
+	then
+		let number_of_missing_files=$number_of_missing_files-1
+	fi
 	echo "$number_of_missing_files $2 missing file(s) have been grepped in the $3 file.";
 	
 	# Put the IFS value back to its normal value
