@@ -54,6 +54,9 @@
 # 30/04/2016 # Remove the error which happens    #
 #            # when launching the script if not  #
 #            # any CR2 exist                     #
+# 14/05/2016 # Improve treatment with files in   #
+#            # subdirectories                    #
+#            # + clean code                      #
 # ############################################## #
 
 
@@ -61,7 +64,6 @@
 # TODO : Add an option to set the Author name with exiftool
 # TODO : A chown to be sure root does not own output files if runned in root mode ? Or quit the program once installed
 # TODO : Make this script work if we take into parameter a file located in a folder which has a space in its name
-
 
 # Global variables
 
@@ -101,7 +103,7 @@ function help_script(){
 	echo -e "Options :"
 	echo -e "-h : shows you this help"
 	echo -e "-r : will convert recursively in subfolders, usefull only in the 0 argument case"
-	echo -e "[-m [[c]opy]] : copies metadata of the input CR2 to the output JPG picture (default)"
+	echo -e "[-m c[opy]] : copies metadata of the input CR2 to the output JPG picture (default)"
 	echo -e "-m d[elete] : deletes metadata of the output JPG picture"
 }
 
@@ -122,11 +124,9 @@ function check_for_needed_softwares(){
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
 		command -v convert >/dev/null 2>&1 || (echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights." && exit 1;)
-		#command -v cjpeg >/dev/null 2>&1 || echo >&2 "I require libjpeg-progs library but it is not installed. Please restart this script with root rights." && exit 1;
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
 		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick
-		#command -v cjpeg >/dev/null 2>&1 || echo >&2 "Installing libjpeg-progs..."; apt-get install libjpeg-progs
 	fi
 }
 
@@ -137,7 +137,6 @@ function check_for_updates(){
 	then
 		# Root rights. Let's check if we have some updates on third parties softwares.
 		apt-get upgrade imagemagick
-		#apt-get upgrade libjpeg-progs
 	fi
 }
 
@@ -239,24 +238,19 @@ function convert_CR2_to_JPG_core(){
 			# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.jpg
 			
 			# Version which just extracts the thumbnail image
-			dcraw -e $filename.CR2
-			mv $filename$dcraw_thumbnail_suffix.jpg $filename.jpg # For 72 files, 3'50
+			dcraw -e $i
+			mv "$directory/$filename$dcraw_thumbnail_suffix.jpg" "$directory/$filename.jpg" # For 72 files, 3'50
 			#exiftool -b -PreviewImage $filename.CR2 > $filename.jpg # For 72 files, 4'40
 
 			# And we add metadata management
 			if [ "$metadata" == "copy" ] || [ "$metadata" == "c" ] || [ "$metadata" == "" ]
 			then
-				bash metadata_tools.sh "$directory/$filename.CR2" $filename.jpg
+				bash metadata_tools.sh "$directory/$filename.CR2" "$directory/$filename.jpg"
 			fi
 
 			if [ "$metadata" == "delete" ] || [ "$metadata" == "d" ]
 			then
-				bash metadata_tools.sh $filename.jpg
-			fi
-
-			# At the end, move the output file to the same directory than the input file if it was not in the current directory
-			if [ "$directory" != "." ]; then
-				mv $filename.jpg $directory
+				bash metadata_tools.sh "$directory/$filename.jpg"
 			fi
 			
 			echo "Conversion done.";
@@ -302,7 +296,7 @@ fi
 # Then, check if it exists some upgrades
 check_for_updates
 
-# Then, come back to normal. :)
+# Then, come back to normal.
 check_root
 if [ $? -eq 0 ];
 then
