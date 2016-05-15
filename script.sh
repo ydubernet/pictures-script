@@ -41,13 +41,13 @@
 # 09/05/2016 # Remove the delete option idea     #
 # 10/05/2016 # Copy all log files to a log       #
 #            # directory                         #
+# 11/05/2016 # Better management of recursive run#
+#            # on subdirectories                 #
+# 14/05/2016 # Fixed the issue with the -i option#
 # ############################################## #
 
 
 # TODO Zone :
-
-# TODO : Permit the user to look for files non recursively
-# TODO : Solve the issue with the -i option
 
 
 # Global variables
@@ -84,6 +84,9 @@ delete=0
 # A boolean which will make a call to convert CR2 to JPG batch if it is true
 convert=0
 
+# A boolean which will make things running recursively on subdirectories
+recursive=0
+
 # An option to launch the metadata script in copy or delete mode
 metadata=1
 
@@ -107,6 +110,7 @@ function help_script() {
     echo -e "-o output_file : to set another output file name than the default out.txt one"
     echo -e "-c : Will call a script which converts CR2 to JPG files"
     echo -e "-m : Used with -c, will remove metadata from the list of output files"
+	echo -e "-r : Will proceed recursively on subdirectories"
 	echo -e "-d : Will delete the missing file listed content (after asking confirmation, of course). So BE CAREFULL using it."
 	echo -e "-s : enable/disable saving log files. You can set the default value by editing this script."
 }
@@ -134,6 +138,29 @@ function delete_temporary_files() {
 	fi
 }
 
+# This function saves log files in a new log directory
+function save_files() {
+	log_directory="log/`date +%Y%m%d_%H%M%S`/"
+	mkdir -p $log_directory
+
+	if [ -f $filtered_file ]
+	then
+		cp $filtered_file $log_directory
+	fi
+	if [ -f $missing_files ]
+	then
+		cp $missing_files $log_directory
+	fi
+	if [ -f $output_file ]
+	then
+		cp $output_file $log_directory
+	fi
+	if [ -f "CR2$output_file" ]
+	then
+		cp "CR2$output_file" $log_directory
+	fi
+}
+
 # This function deletes all files writen in the temporary text file in param
 function delete_files() {
 	echo "Are you sure you want to delete those files ? [y/n] " ;
@@ -145,13 +172,15 @@ function delete_files() {
 	if [ $answ = "y" -o $answ = "Y" ]; then
 		while read line;
 		do
-		    echo -e "Trying to delete $line";
-			rm $line
-			if [ $? -eq 0 ]; then
-				counter_plus
-				echo "Success in deleting $line";
-			else
-				echo "Failure in deleting $line";
+			if [ -f $line ]; then
+				echo -e "Trying to delete $line";
+				rm $line
+				if [ $? -eq 0 ]; then
+					counter_plus
+					echo "Success in deleting $line";
+				else
+					echo "Failure in deleting $line";
+				fi
 			fi
 		done < $1
 		echo -e "Deleting process done.";
@@ -168,34 +197,39 @@ function counter_plus() {
   let counter=$counter+1;
 }
 
-# To extract all the JPG files from a file obtained by a ls -l or a dir on Windows.
+# To extract all the JPG files from a written list of files in a text file
 # Specific function for JPG format which can be both JPG and JPEG
 function extract_JPG_pictures() {
 	grep -E -x -i "^.*\.(JPE?G)$" $1 > $2
 	echo "`cat $2 | wc -l` JPG file(s) have been grepped in the $2 file.";
 }
 
-# To extract all the files with a specified $3 format from a file obtained by a ls -l or a dir on Windows.
+# To extract all the files with a specified $3 format from a written list of files in a text file
 function extract_files() {
 	grep -E -x -i "^.*\.($3)$" $1 > $2
 	echo "`cat $2 | wc -l` $3 file(s) have been grepped in the $2 file.";
 }
 
-# We read the input file and look for files from the current folder
+# If only one argument, then does a find * from the current directory
+# Else, reads the input file and look for files written in it from the current folder
 # We can exclude a folder
-# Then, all found files are put in the filtered file
+# At the end, all found files are put in the filtered file
 function look_for_files() {
-	while read line;
-		do
-		if [ $# -eq 3 ]
-		then
-			find . -name $line | grep -v $3 >> $2; #exclude a folder
-		else
-			find . -name $line >> $2
-		fi
-	done < $1
-
-	echo "`cat $2 |wc -l` file(s) grepped in the $1 have been found from the current folder.";
+	if [ $# -gt 1 ]
+	then
+		while read line;
+			do
+			if [ $# -eq 3 ]
+			then
+				find . $find_options -iname  "`basename $line`" | grep -v $3 >> $1; #exclude a folder
+			else
+				find . $find_options -iname "`basename $line`"  >> $1
+			fi
+		done < $2
+	else
+		find . $find_options -iname "*" > $1
+	fi
+	echo "`cat $1 |wc -l` file(s) grepped in the $1 have been found from the current folder.";
 }
 
 # With two arguments base_format and to_check_format,
@@ -203,6 +237,9 @@ function look_for_files() {
 # but in the to check format
 function list_missing_files()
 {
+	base_files=`find . $find_options -iname "*.$base_format"`
+	to_check_files=`find . $find_options -iname "*.$to_check_format"`
+
 	# In order to be able to run on directories which may have spaces, 
 	# we save the IFS value and replace it by the "new line" caracter
 	SAVEIFS=$IFS
@@ -210,23 +247,12 @@ function list_missing_files()
 	
 	base_format=$1
 	to_check_format=$2
-	
-	# TODO : add recursive option
-	recursive=0
-	
-	if [ $recursive -eq 1 ]; then
-		base_files=`find . -iname "*.$1"`
-		to_check_files=`find . -iname "*.$2"`
-	else
-		base_files=`ls -1R *.$1`
-		to_check_files=`ls -1R *.$2`
-	fi
-	
+
 	found_files=""
 	
 	for file in $to_check_files
 	do
-		filename=`basename $file .$2` 
+		filename=`basename $file .$to_check_format`
 		if [[ $base_files !=  *$filename* ]] # And if we want the ones which exist, we replace != by ==.
                                              # an option could be a nice idea for that
 		then
@@ -250,7 +276,7 @@ function list_missing_files()
 delete_temporary_files
 
 #extracts option values
-while getopts "h?i:f:o:dcms" opt; do
+while getopts "h?i:f:o:dcmrs" opt; do
     case "$opt" in
     h|\?)
         help_script
@@ -277,6 +303,9 @@ while getopts "h?i:f:o:dcms" opt; do
 	m)  
         metadata=0
 		;;
+	r)
+		recursive=1
+		;;
 	s)
 		if [ $save -eq 1 ]
 		then
@@ -290,19 +319,34 @@ done
 
 shift $((OPTIND-1))
 
+
+find_options=""
+
+# Deal with find options regarding the $recursive value
+if [ $recursive -eq 0 ];
+then
+	find_options='-maxdepth 1'
+fi
+
+# look for files if an input file has been given
 if [ "$input_file" != "" ]
 then
 	if [ "$ignored_folder" != "" ]
 	then
-		look_for_files $input_file $filtered_file $ignored_folder
+		look_for_files $filtered_file $input_file $ignored_folder
 	else
-		look_for_files $input_file $filtered_file
+		look_for_files $filtered_file $input_file
 	fi
 else
-	`ls >> "$filtered_file"`
+	if [ ! -f $filtered_file ]
+	then
+		touch $filtered_file
+	fi
+	look_for_files $filtered_file
 fi
 
-
+# Given the input filtered files,
+# extract the one which have the given input format
 if [ "$extract_format" != "" ]
 then
     extract_files $filtered_file $output_file $extract_format
@@ -312,6 +356,7 @@ else
 	extract_JPG_pictures $filtered_file $output_file
 fi
 
+# Call to our converter if $convert option is activated
 if [ $convert -eq 1 ]
 then
 
@@ -324,7 +369,13 @@ then
 		options="$options -m copy "
 	else
 		# We remove metadata from the generated JPG files
-		options="$options -m remove "
+		options="$options -m delete "
+	fi
+
+	if [ $recursive -eq 1 ]
+	then
+		# Add a call to -r in the converter script
+		options="$options -r"
 	fi
 
 	if [ -f $output_file ]
@@ -337,6 +388,8 @@ then
 	bash convert_cr2_to_jpg.sh $options $cr2output_file
 fi
 
+# Once converted, if $delete option, then list missing files
+# and delete them after the user agrees
 if [ $delete -eq 1 ]
 then 
 	list_missing_files "jpg" "CR2" $missing_files
@@ -346,23 +399,5 @@ fi
 # At the end, save logs files to an appropriated log directory
 if [ $save -eq 1 ]
 then
-	log_directory="log/`date +%Y%m%d_%H%M%S`/"
-	mkdir -p $log_directory
-
-	if [ -f $filtered_file ]
-	then
-		cp $filtered_file $log_directory
-	fi
-	if [ -f $missing_files ]
-	then
-		cp $missing_files $log_directory
-	fi
-	if [ -f $output_file ]
-	then
-		cp $output_file $log_directory
-	fi
-	if [ -f "CR2$output_file" ]
-	then
-		cp "CR2$output_file" $log_directory
-	fi
+	save_files
 fi
