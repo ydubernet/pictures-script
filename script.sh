@@ -46,6 +46,7 @@
 # 14/05/2016 # Fixed the issue with the -i option#
 # 15/05/2016 # Change the way we list missing    #
 #            # files                             #
+# 13/08/2016 # Move log files instead of copying #
 # ############################################## #
 
 
@@ -147,19 +148,19 @@ function save_files() {
 
 	if [ -f $filtered_file ]
 	then
-		cp $filtered_file $log_directory
+		mv $filtered_file $log_directory
 	fi
 	if [ -f $missing_files ]
 	then
-		cp $missing_files $log_directory
+		mv $missing_files $log_directory
 	fi
 	if [ -f $output_file ]
 	then
-		cp $output_file $log_directory
+		mv $output_file $log_directory
 	fi
 	if [ -f "CR2$output_file" ]
 	then
-		cp "CR2$output_file" $log_directory
+		mv "CR2$output_file" $log_directory
 	fi
 }
 
