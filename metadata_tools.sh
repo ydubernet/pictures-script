@@ -17,6 +17,8 @@
 
 
 # TODO Zone :
+# Add the following metadata edit option : -DateTimeOriginal
+
 
 # Global variables :
 
