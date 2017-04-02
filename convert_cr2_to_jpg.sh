@@ -31,7 +31,7 @@
 #            # script in order to make it usable #
 #            # without necessarly needing to     #
 #            # convert                           #
-# 13/03/2016 # Remove any call to a rename script#
+# 13/03/2016 # Remove any call to a rename script#
 #            #                                   #
 # 14/03/2016 # Possible to take into parameter   #
 #            # names of CR2 files to be converted#
@@ -49,7 +49,7 @@
 #            # user warning message              #
 #            #                                   #
 # 28/04/2016 # Solved the issue when a library is#
-#            # needed but the script continues to#
+#            # needed but the script continues to#
 #            # run                               #
 # 30/04/2016 # Remove the error which happens    #
 #            # when launching the script if not  #
@@ -57,6 +57,8 @@
 # 14/05/2016 # Improve treatment with files in   #
 #            # subdirectories                    #
 #            # + clean code                      #
+# 02/04/2017 # Use exiftool instead of convert   #
+#            # (issues on Windows 10 for dcraw)  #
 # ############################################## #
 
 
@@ -123,10 +125,10 @@ function check_for_needed_softwares(){
 	if [ $? -eq 1 ];
 	then
 		# No root rights. If some softwares are not installed, just inform the user I need root rights to install those softwares.
-		command -v convert >/dev/null 2>&1 || (echo >&2 "I require imagemagick software but it is not installed. Please restart this script with root rights." && exit 1;)
+		command -v exiftool >/dev/null 2>&1 || (echo >&2 "I require exiftool library but is is not installed. Please restart this script with root rights." && exit 1;)
 	else
 		# Root rights. If some softwares are not installed, gonna install them.
-		command -v convert >/dev/null 2>&1 || echo >&2 "Installing imagemagick..."; apt-get install imagemagick
+		command -v exiftool >/dev/null 2>&1 || echo >&2 "Installing exiftool..."; apt-get install libimage-exiftool-perl
 	fi
 }
 
@@ -238,9 +240,9 @@ function convert_CR2_to_JPG_core(){
 			# cjpeg -quality 95 -optimize -progressive $filename.tiff $filename.jpg
 			
 			# Version which just extracts the thumbnail image
-			dcraw -e $i
-			mv "$directory/$filename$dcraw_thumbnail_suffix.jpg" "$directory/$filename.jpg" # For 72 files, 3'50
-			#exiftool -b -PreviewImage $filename.CR2 > $filename.jpg # For 72 files, 4'40
+			#dcraw -e $i
+			#mv "$directory/$filename$dcraw_thumbnail_suffix.jpg" "$directory/$filename.jpg" # For 72 files, 3'50
+			exiftool -b -PreviewImage $filename.CR2 > $filename.jpg # For 72 files, 4'40
 
 			# And we add metadata management
 			if [ "$metadata" == "copy" ] || [ "$metadata" == "c" ] || [ "$metadata" == "" ]
