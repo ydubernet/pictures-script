@@ -47,6 +47,9 @@
 # 15/05/2016 # Change the way we list missing    #
 #            # files                             #
 # 13/08/2016 # Move log files instead of copying #
+# 09/04/2017 # Rename missing per surplus which  #
+#            # actually corresponds to the real  #
+#            # algorithm of that function        #
 # ############################################## #
 
 
@@ -75,11 +78,11 @@ ignored_folder=""
 # The output file from a extract_format call
 output_file="out.txt"
 
-# The output file from a list_missing_files call
-missing_files="missing.txt"
+# The output file from a list_surplus_files call
+surplus_files="surplus.txt"
 
 # The input file of a list of files to be deleted
-to_delete_file=$missing_files
+to_delete_file=$surplus_files
 
 # A boolean which will generate a call to delete_files function if it is true
 delete=0
@@ -114,7 +117,7 @@ function help_script() {
     echo -e "-c : Will call a script which converts CR2 to JPG files"
     echo -e "-m : Used with -c, will remove metadata from the list of output files"
 	echo -e "-r : Will proceed recursively on subdirectories"
-	echo -e "-d : Will delete the missing file listed content (after asking confirmation, of course). So BE CAREFULL using it."
+	echo -e "-d : Will delete the surplus file listed content (after asking confirmation, of course). So BE CAREFULL using it."
 	echo -e "-s : enable/disable saving log files. You can set the default value by editing this script."
 }
 
@@ -135,9 +138,9 @@ function delete_temporary_files() {
 		rm "CR2$output_file"
 	fi
 
-	if [ -f $missing_files ]
+	if [ -f $surplus_files ]
 	then
-		rm $missing_files
+		rm $surplus_files
 	fi
 }
 
@@ -150,9 +153,9 @@ function save_files() {
 	then
 		mv $filtered_file $log_directory
 	fi
-	if [ -f $missing_files ]
+	if [ -f $surplus_files ]
 	then
-		mv $missing_files $log_directory
+		mv $surplus_files $log_directory
 	fi
 	if [ -f $output_file ]
 	then
@@ -234,9 +237,9 @@ function look_for_files() {
 }
 
 # With two arguments base_format and to_check_format,
-# Will give the list of files which are not in the base format
-# but in the to check format
-function list_missing_files()
+# Will give the list of files which do not exist in the base format
+# but do exist in the to_check format
+function list_surplus_files()
 {
 	base_files=`find . $find_options -iname "*.$1"`
 	to_check_files=`find . $find_options -iname "*.$2"`
@@ -266,12 +269,12 @@ function list_missing_files()
 	done
 
 	echo "$found_files" > $3
-	number_of_missing_files=`cat $3 | wc -l`
+	number_of_surplus_files=`cat $3 | wc -l`
 	if [ -z $found_files ]
 	then
-		let number_of_missing_files=$number_of_missing_files-1
+		let number_of_surplus_files=$number_of_surplus_files-1
 	fi
-	echo "$number_of_missing_files $2 missing file(s) have been grepped in the $3 file.";
+	echo "$number_of_surplus_files $2 file(s) have been grepped in the $3 file.";
 	
 	# Put the IFS value back to its normal value
 	IFS=$SAVEIFS
@@ -396,11 +399,11 @@ then
 	bash convert_cr2_to_jpg.sh $options $cr2output_file
 fi
 
-# Once converted, if $delete option, then list missing files
+# Once converted, if $delete option, then list surplus files
 # and delete them after the user agrees
 if [ $delete -eq 1 ]
 then 
-	list_missing_files "jpg" "CR2" $missing_files
+	list_surplus_files "jpg" "CR2" $surplus_files
 	delete_files $to_delete_file
 fi
 
