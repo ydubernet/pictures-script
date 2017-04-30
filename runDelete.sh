@@ -2,11 +2,11 @@
 
 # list JPG files
 echo "Number of JPG files"
-ls -l *.JPG | wc -l
+find . -maxdepth 1 -iname "*.JPG" | wc -l
 
 # list CR2 files
 echo "Number of CR2 files"
-ls -l *.CR2 | wc -l
+find . -maxdepth 1 -iname "*.CR2" | wc -l
 
 echo "Do you want to run script which deletes CR2 files not existing as JPG files ? [y/n]"
 read answ_equalization;
@@ -23,15 +23,15 @@ read answ;
 
 if [ $answ = "y" -o $answ = "Y" ];
 then
-	rm *.JPG
+	find . -maxdepth 1 -iname "*.JPG" -exec rm {} \;
 fi
 
-echo "Do you want to remove the script file ? [y/n]"
+echo "Do you want to remove script files ? [y/n]"
 read answ2;
 
 if [ $answ2 = "y" -o $answ2 = "Y" ];
 then
-	rm script.sh
+	rm *.sh
 fi
 
 echo "Do you want to remove logs files ? [y/n]"
@@ -40,6 +40,11 @@ read answ3;
 if [ $answ3 = "y" -o $answ3 = "Y" ];
 then
 	rm -r *.txt
+
+	if [ -d log ];
+	then
+		rm -r log\
+	fi
 fi
 
 
