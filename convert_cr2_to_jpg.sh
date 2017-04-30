@@ -66,6 +66,7 @@
 # TODO : Add an option to set the Author name with exiftool
 # TODO : A chown to be sure root does not own output files if runned in root mode ? Or quit the program once installed
 # TODO : Make this script work if we take into parameter a file located in a folder which has a space in its name
+# TODO : Fix the issue when running the script with pictures to convert located in a subfolder : gives an error
 
 # Global variables
 
