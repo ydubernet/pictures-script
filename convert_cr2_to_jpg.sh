@@ -2,7 +2,7 @@
 
 # This script is a batch to do batch CR2 to JPG conversion
 
-# © Copyright 2015-2016 - Yoann DUBERNET - yoann [dot] dubernet [ at ] gmail.com
+# © Copyright 2015-2016 - Yoann DUBERNET 
 
 # ############################################## #
 #    Date    #            Remark                 #

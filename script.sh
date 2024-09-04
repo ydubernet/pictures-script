@@ -3,7 +3,7 @@
 # This script is a tool to manage a lot of files depending on some formats.
 # It mainly logs them, but if an option is set, it also can perform write operations such as deletes.
 
-# © Copyright 2014-2015-2016 - Yoann DUBERNET - yoann [dot] dubernet [ at ] gmail.com
+# © Copyright 2014-2015-2016 - Yoann DUBERNET
 
 # ############################################## #
 #    Date    #            Remark                 #

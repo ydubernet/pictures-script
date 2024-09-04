@@ -2,7 +2,7 @@
 
 # This script is a batch to deal with pictures metadata
 
-# © Copyright 2016 - Yoann DUBERNET - yoann [dot] dubernet [ at ] gmail.com
+# © Copyright 2016 - Yoann DUBERNET
 
 # ############################################## #
 #    Date    #            Remark                 #
